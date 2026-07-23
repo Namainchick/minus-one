@@ -1,0 +1,47 @@
+import { afterEach, describe, expect, it } from "vitest";
+import { MemoryCounter, checkRateLimit, consumeDailyBudget, RATE_LIMIT_PER_HOUR } from "@/lib/limits";
+
+const NOW = new Date("2026-07-23T10:00:00Z");
+
+afterEach(() => {
+  delete process.env.DAILY_SEPARATION_LIMIT;
+});
+
+describe("checkRateLimit", () => {
+  it("erlaubt die ersten 3 Anfragen pro IP und Stunde, blockt die vierte", async () => {
+    const c = new MemoryCounter();
+    for (let i = 0; i < RATE_LIMIT_PER_HOUR; i++) {
+      expect(await checkRateLimit(c, "1.2.3.4", NOW)).toBe(true);
+    }
+    expect(await checkRateLimit(c, "1.2.3.4", NOW)).toBe(false);
+  });
+
+  it("zählt IPs getrennt", async () => {
+    const c = new MemoryCounter();
+    for (let i = 0; i < RATE_LIMIT_PER_HOUR; i++) await checkRateLimit(c, "1.2.3.4", NOW);
+    expect(await checkRateLimit(c, "5.6.7.8", NOW)).toBe(true);
+  });
+
+  it("beginnt in der nächsten Stunde neu", async () => {
+    const c = new MemoryCounter();
+    for (let i = 0; i < RATE_LIMIT_PER_HOUR; i++) await checkRateLimit(c, "1.2.3.4", NOW);
+    const nextHour = new Date("2026-07-23T11:00:01Z");
+    expect(await checkRateLimit(c, "1.2.3.4", nextHour)).toBe(true);
+  });
+});
+
+describe("consumeDailyBudget", () => {
+  it("erlaubt bis zum Limit und blockt danach", async () => {
+    process.env.DAILY_SEPARATION_LIMIT = "2";
+    const c = new MemoryCounter();
+    expect(await consumeDailyBudget(c, NOW)).toBe(true);
+    expect(await consumeDailyBudget(c, NOW)).toBe(true);
+    expect(await consumeDailyBudget(c, NOW)).toBe(false);
+  });
+
+  it("nutzt 20 als Default-Limit", async () => {
+    const c = new MemoryCounter();
+    for (let i = 0; i < 20; i++) expect(await consumeDailyBudget(c, NOW)).toBe(true);
+    expect(await consumeDailyBudget(c, NOW)).toBe(false);
+  });
+});
