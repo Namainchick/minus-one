@@ -1,5 +1,6 @@
 import { del } from "@vercel/blob";
 import { NextResponse } from "next/server";
+import { isValidJobId } from "@/lib/job-id";
 import { getJob } from "@/lib/replicate";
 
 export const runtime = "nodejs";
@@ -27,6 +28,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
   const { id } = await params;
+  if (!isValidJobId(id)) {
+    return NextResponse.json({ error: "not_found" }, { status: 404 });
+  }
   const job = await getJob(id);
   if (job.status === "done") {
     await deleteInputQuietly(job.inputUrl);
