@@ -58,8 +58,16 @@ function isMock(): boolean {
   return process.env.MOCK_REPLICATE === "1";
 }
 
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`${name} fehlt — ohne diese Env-Var kann die echte Stem-Trennung nicht laufen (siehe .env.example).`);
+  }
+  return value;
+}
+
 function client(): Replicate {
-  return new Replicate({ auth: process.env.REPLICATE_API_TOKEN! });
+  return new Replicate({ auth: requireEnv("REPLICATE_API_TOKEN") });
 }
 
 /** Startet die Trennung, gibt die Job-ID zurück. */
@@ -70,7 +78,7 @@ export async function startSeparation(audioUrl: string): Promise<string> {
     return id;
   }
   const prediction = await client().predictions.create({
-    version: process.env.REPLICATE_DEMUCS_VERSION!,
+    version: requireEnv("REPLICATE_DEMUCS_VERSION"),
     // Key-Namen ggf. an das echte Input-Schema anpassen (siehe Task 6 Step 1 im Plan)
     input: { audio: audioUrl, model: "htdemucs_6s", output_format: "mp3" },
   });

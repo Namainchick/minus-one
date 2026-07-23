@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Minus One
 
-## Getting Started
+Song hochladen, in 6 Instrumente zerlegen (Demucs `htdemucs_6s` via Replicate),
+und im Mini-Mischpult die Spuren schalten, die deine Band heute selbst spielt.
+„Music minus one" — die Band minus das Mitglied, das du ersetzt.
 
-First, run the development server:
+## Lokal starten (ohne Kosten)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+    npm install
+    ./scripts/make-fixture-stems.sh        # Platzhalter-Demo (braucht ffmpeg)
+    MOCK_REPLICATE=1 NEXT_PUBLIC_MOCK_UPLOAD=1 npm run dev
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Tests
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+    npm test          # Vitest (Validierung, Limits, Replicate-Mapping, API-Routen)
+    npm run test:e2e  # Playwright (Demo-Flow + Upload-Flow, alles gemockt)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Echten Demo-Song einspielen (einmalig, lizenzfreier Track!)
 
-## Learn More
+    scripts/prepare-demo.sh pfad/zum/song.mp3 "Songtitel"
 
-To learn more about Next.js, take a look at the following resources:
+(demucs wird über pipx oder ein venv installiert — das Skript erklärt es, falls es fehlt.)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deploy (Vercel)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Vercel-Projekt anlegen, Repo verbinden, Blob-Store verknüpfen.
+2. Upstash-Redis anlegen (kostenloser Tarif), Env-Vars setzen (siehe `.env.example`).
+3. Replicate-Token erzeugen und **Spend Limit setzen** (Dashboard → Billing, z. B. 10 $).
+4. `REPLICATE_DEMUCS_VERSION` ermitteln:
 
-## Deploy on Vercel
+       curl -s https://api.replicate.com/v1/models/ryan5453/demucs \
+         -H "Authorization: Bearer $REPLICATE_API_TOKEN" \
+         | python3 -c "import json,sys; d=json.load(sys.stdin); v=d['latest_version']; print('VERSION:', v['id']); props=v.get('openapi_schema',{}).get('components',{}).get('schemas',{}).get('Input',{}).get('properties',{}); print('INPUT KEYS:', list(props.keys()))"
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   Den Hash als `REPLICATE_DEMUCS_VERSION` setzen. Falls die Input-Keys nicht
+   `audio`/`model`/`output_format` heißen, `lib/replicate.ts` anpassen.
+5. Push auf `main` → Deploy.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Checkliste vor dem ersten Zeigen (manuell)
+
+- [ ] Echter Upload-Durchlauf gegen echtes Replicate (Desktop Chrome)
+- [ ] Demo-Flow auf iPhone-Safari (Play, Kanal schalten, Fader, Seek)
+- [ ] Rate-Limit greift (4. Upload in einer Stunde → freundliche Box)
+- [ ] Replicate-Spend-Limit ist gesetzt
+- [ ] Echter Demo-Song (lizenzfrei) statt Platzhalter-Töne eingespielt

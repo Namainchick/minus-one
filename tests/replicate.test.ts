@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { mapPrediction } from "@/lib/replicate";
 
 const output = {
@@ -35,5 +35,26 @@ describe("mapPrediction", () => {
   it("mappt failed/canceled auf failed", () => {
     expect(mapPrediction({ id: "j1", status: "failed", error: "boom" }).status).toBe("failed");
     expect(mapPrediction({ id: "j1", status: "canceled" }).status).toBe("failed");
+  });
+});
+
+describe("startSeparation ohne Env-Vars", () => {
+  const originalToken = process.env.REPLICATE_API_TOKEN;
+  const originalMock = process.env.MOCK_REPLICATE;
+
+  afterEach(() => {
+    if (originalToken === undefined) delete process.env.REPLICATE_API_TOKEN;
+    else process.env.REPLICATE_API_TOKEN = originalToken;
+    if (originalMock === undefined) delete process.env.MOCK_REPLICATE;
+    else process.env.MOCK_REPLICATE = originalMock;
+  });
+
+  it("wirft eine klare Fehlermeldung im Real-Modus ohne Token", async () => {
+    delete process.env.MOCK_REPLICATE;
+    delete process.env.REPLICATE_API_TOKEN;
+    const { startSeparation } = await import("@/lib/replicate");
+    await expect(startSeparation("https://x.public.blob.vercel-storage.com/a.wav")).rejects.toThrow(
+      /REPLICATE_API_TOKEN/,
+    );
   });
 });
