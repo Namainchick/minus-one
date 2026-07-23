@@ -1,10 +1,13 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { MemoryCounter, checkRateLimit, consumeDailyBudget, RATE_LIMIT_PER_HOUR } from "@/lib/limits";
 
 const NOW = new Date("2026-07-23T10:00:00Z");
 
 afterEach(() => {
   delete process.env.DAILY_SEPARATION_LIMIT;
+  delete process.env.VERCEL_ENV;
+  delete process.env.UPSTASH_REDIS_REST_URL;
+  delete process.env.UPSTASH_REDIS_REST_TOKEN;
 });
 
 describe("checkRateLimit", () => {
@@ -43,5 +46,16 @@ describe("consumeDailyBudget", () => {
     const c = new MemoryCounter();
     for (let i = 0; i < 20; i++) expect(await consumeDailyBudget(c, NOW)).toBe(true);
     expect(await consumeDailyBudget(c, NOW)).toBe(false);
+  });
+});
+
+describe("defaultCounter", () => {
+  it("wirft in Produktion ohne Upstash-Env-Vars", async () => {
+    vi.resetModules();
+    process.env.VERCEL_ENV = "production";
+    delete process.env.UPSTASH_REDIS_REST_URL;
+    delete process.env.UPSTASH_REDIS_REST_TOKEN;
+    const { defaultCounter } = await import("@/lib/limits");
+    expect(() => defaultCounter()).toThrow(/Upstash/);
   });
 });
