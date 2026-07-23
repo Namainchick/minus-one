@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { PROCESSING_LINES } from "@/lib/messages";
 
-type Props = { label: string };
+type Props = { label: string; onDemo?: () => void };
 
-export function ProcessingView({ label }: Props) {
+export function ProcessingView({ label, onDemo }: Props) {
   const [lineIndex, setLineIndex] = useState(0);
   const [elapsed, setElapsed] = useState(0);
 
@@ -38,6 +38,15 @@ export function ProcessingView({ label }: Props) {
       <p className="mt-2 text-xs text-neutral-500">
         {remaining > 0 ? `noch ~${remaining} Sekunden` : "gleich fertig…"}
       </p>
+      {onDemo && (
+        <button
+          type="button"
+          onClick={onDemo}
+          className="mt-8 border-[3px] border-ink bg-poster-red px-4 py-2 text-sm font-bold uppercase text-white shadow-poster transition-transform active:translate-x-1 active:translate-y-1 active:shadow-none"
+        >
+          Keine Lust zu warten? Demo-Song laden →
+        </button>
+      )}
     </div>
   );
 }

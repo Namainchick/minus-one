@@ -11,6 +11,8 @@ import { ERROR_MESSAGES, type ErrorCode } from "@/lib/messages";
 import { STEMS, type StemName } from "@/lib/stems";
 import { precheckFile, uploadSong } from "@/lib/upload";
 
+const PROCESSING_TIMEOUT_MS = 5 * 60 * 1000;
+
 type AppState =
   | { phase: "start" }
   | { phase: "uploading" }
@@ -23,8 +25,11 @@ export default function Home() {
   const [state, setState] = useState<AppState>({ phase: "start" });
   const [engine, setEngine] = useState<MultiTrackPlayer | null>(null);
   const engineRef = useRef<MultiTrackPlayer | null>(null);
+  const loadingRef = useRef(false);
 
   const loadStems = useCallback(async (urls: Record<StemName, string>, title: string) => {
+    if (loadingRef.current) return;
+    loadingRef.current = true;
     engineRef.current?.dispose();
     const player = new MultiTrackPlayer();
     engineRef.current = player;
@@ -35,6 +40,8 @@ export default function Home() {
       setState({ phase: "player", title });
     } catch {
       setState({ phase: "error", code: "network" });
+    } finally {
+      loadingRef.current = false;
     }
   }, []);
 
@@ -84,7 +91,13 @@ export default function Home() {
   useEffect(() => {
     if (state.phase !== "processing") return;
     const { jobId } = state;
+    const startedAt = Date.now();
     const timer = window.setInterval(async () => {
+      if (Date.now() - startedAt > PROCESSING_TIMEOUT_MS) {
+        window.clearInterval(timer);
+        setState({ phase: "error", code: "processing_failed" });
+        return;
+      }
       try {
         const res = await fetch(`/api/jobs/${jobId}`);
         const job = (await res.json()) as
@@ -115,7 +128,7 @@ export default function Home() {
 
       {state.phase === "uploading" && <ProcessingView label="Song wird hochgeladen…" />}
 
-      {state.phase === "processing" && <ProcessingView label="Die Band wird zerlegt…" />}
+      {state.phase === "processing" && <ProcessingView label="Die Band wird zerlegt…" onDemo={startDemo} />}
 
       {state.phase === "loading-stems" && (
         <p className="mt-10 text-sm font-bold uppercase">
@@ -132,7 +145,11 @@ export default function Home() {
           <PosterBox
             title={ERROR_MESSAGES[state.code].title}
             text={ERROR_MESSAGES[state.code].text}
-            onRetry={() => setState({ phase: "start" })}
+            onRetry={
+              state.code === "budget_exhausted" || state.code === "rate_limited"
+                ? undefined
+                : () => setState({ phase: "start" })
+            }
             onDemo={startDemo}
           />
         </div>

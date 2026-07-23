@@ -5,10 +5,9 @@ import { useRef, useState } from "react";
 type Props = {
   onFile: (file: File) => void;
   onDemo: () => void;
-  disabled?: boolean;
 };
 
-export function UploadZone({ onFile, onDemo, disabled }: Props) {
+export function UploadZone({ onFile, onDemo }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
 
@@ -16,7 +15,6 @@ export function UploadZone({ onFile, onDemo, disabled }: Props) {
     <div className="mt-8 flex flex-col gap-4 sm:flex-row">
       <button
         type="button"
-        disabled={disabled}
         onClick={() => inputRef.current?.click()}
         onDragOver={(e) => {
           e.preventDefault();
@@ -29,7 +27,7 @@ export function UploadZone({ onFile, onDemo, disabled }: Props) {
           const file = e.dataTransfer.files[0];
           if (file) onFile(file);
         }}
-        className={`flex-[2] border-[3px] border-dashed border-ink p-8 text-center transition-colors disabled:opacity-40 ${
+        className={`flex-[2] border-[3px] border-dashed border-ink p-8 text-center transition-colors ${
           dragging ? "bg-poster-yellow" : "bg-white"
         }`}
       >

@@ -53,3 +53,44 @@ test("Falsches Format zeigt Poster-Fehlerbox", async ({ page }) => {
   const alert = page.getByRole("alert").filter({ has: page.getByRole("heading") });
   await expect(alert).toContainText("FALSCHES FORMAT");
 });
+
+test("Rate-Limit zeigt Poster-Box ohne Retry, Demo bleibt erreichbar", async ({ page }) => {
+  await page.route("**/api/separate", (route) =>
+    route.fulfill({ status: 429, contentType: "application/json", body: JSON.stringify({ error: "rate_limited" }) }),
+  );
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: /mp3 oder wav hier reinwerfen/i })
+    .locator("input[type=file]")
+    .setInputFiles({ name: "probe.wav", mimeType: "audio/wav", buffer: makeWavBuffer(3) });
+  const alert = page.getByRole("alert").filter({ has: page.getByRole("heading") });
+  await expect(alert).toContainText("KURZE PAUSE");
+  await expect(alert.getByRole("button", { name: /nochmal versuchen/i })).toHaveCount(0);
+  await expect(alert.getByRole("button", { name: /demo-song laden/i })).toBeVisible();
+});
+
+test("Budget aufgebraucht zeigt Poster-Box ohne Retry", async ({ page }) => {
+  await page.route("**/api/separate", (route) =>
+    route.fulfill({ status: 429, contentType: "application/json", body: JSON.stringify({ error: "budget_exhausted" }) }),
+  );
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: /mp3 oder wav hier reinwerfen/i })
+    .locator("input[type=file]")
+    .setInputFiles({ name: "probe.wav", mimeType: "audio/wav", buffer: makeWavBuffer(3) });
+  const alert = page.getByRole("alert").filter({ has: page.getByRole("heading") });
+  await expect(alert).toContainText("TAGESBUDGET AUFGEBRAUCHT");
+  await expect(alert.getByRole("button", { name: /nochmal versuchen/i })).toHaveCount(0);
+});
+
+test("Demo-Ausweg während der Verarbeitung führt in den Player", async ({ page }) => {
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: /mp3 oder wav hier reinwerfen/i })
+    .locator("input[type=file]")
+    .setInputFiles({ name: "probe.wav", mimeType: "audio/wav", buffer: makeWavBuffer(3) });
+  const processing = page.getByTestId("processing");
+  await expect(processing).toBeVisible();
+  await processing.getByRole("button", { name: /demo-song laden/i }).click();
+  await expect(page.getByRole("button", { name: "Abspielen" })).toBeVisible({ timeout: 20_000 });
+});
