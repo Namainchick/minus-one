@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Hero } from "@/components/Hero";
+import { PlayerView } from "@/components/PlayerView";
 import { PosterBox } from "@/components/PosterBox";
 import { ProcessingView } from "@/components/ProcessingView";
 import { UploadZone } from "@/components/UploadZone";
@@ -123,7 +124,7 @@ export default function Home() {
       )}
 
       {state.phase === "player" && engine && (
-        <p className="mt-10 text-sm font-bold uppercase">Player kommt in Task 14: {state.title}</p>
+        <PlayerView engine={engine} title={state.title} />
       )}
 
       {state.phase === "error" && (
