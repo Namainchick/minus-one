@@ -19,15 +19,17 @@ type AppState =
 
 export default function Home() {
   const [state, setState] = useState<AppState>({ phase: "start" });
+  const [engine, setEngine] = useState<MultiTrackPlayer | null>(null);
   const engineRef = useRef<MultiTrackPlayer | null>(null);
 
   const loadStems = useCallback(async (urls: Record<StemName, string>, title: string) => {
     engineRef.current?.dispose();
-    const engine = new MultiTrackPlayer();
-    engineRef.current = engine;
+    const player = new MultiTrackPlayer();
+    engineRef.current = player;
+    setEngine(player);
     setState({ phase: "loading-stems", loaded: 0, title });
     try {
-      await engine.load(urls, (loaded) => setState({ phase: "loading-stems", loaded, title }));
+      await player.load(urls, (loaded) => setState({ phase: "loading-stems", loaded, title }));
       setState({ phase: "player", title });
     } catch {
       setState({ phase: "error", code: "network" });
@@ -123,7 +125,7 @@ export default function Home() {
         </p>
       )}
 
-      {state.phase === "player" && engineRef.current && (
+      {state.phase === "player" && engine && (
         <p className="mt-10 text-sm font-bold uppercase">Player kommt in Task 14: {state.title}</p>
       )}
 
