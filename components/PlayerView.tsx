@@ -28,10 +28,15 @@ export function PlayerView({ engine, title }: Props) {
         onPlayPause={() => {
           if (engine.playing) {
             engine.pause();
+            forceUpdate();
           } else {
-            void engine.play();
+            engine
+              .play()
+              .catch(() => {
+                // Engine hat sich selbst pausiert — UI-Zustand nachziehen.
+              })
+              .finally(() => forceUpdate());
           }
-          forceUpdate();
         }}
         onSeek={(s) => {
           engine.seek(s);

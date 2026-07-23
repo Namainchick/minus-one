@@ -113,7 +113,11 @@ export class MultiTrackPlayer {
     const wasPlaying = this.playing;
     if (wasPlaying) this.pause();
     for (const el of this.audio.values()) el.currentTime = seconds;
-    if (wasPlaying) void this.play();
+    if (wasPlaying) {
+      this.play().catch(() => {
+        // play() hat bereits pausiert — Zustand bleibt konsistent, kein unhandled rejection.
+      });
+    }
   }
 
   setEnabled(stem: StemName, on: boolean): void {
