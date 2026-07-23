@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { createReadStream } from "node:fs";
-import { mkdir, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import path from "node:path";
 import { Readable } from "node:stream";
@@ -11,6 +11,26 @@ import type { JobStatus } from "./replicate";
 const BASE_DIR = path.join(tmpdir(), "minus-one-local");
 const UPLOAD_DIR = path.join(BASE_DIR, "uploads");
 const OUT_DIR = path.join(BASE_DIR, "out");
+const UPLOAD_MAX_AGE_MS = 60 * 60 * 1000; // 1h
+const OUTPUT_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24h
+
+/** Löscht verwaiste Uploads (>1h) und alte Stem-Ordner (>24h). Best effort. */
+async function sweepOldFiles(): Promise<void> {
+  const now = Date.now();
+  for (const [dir, maxAge] of [
+    [UPLOAD_DIR, UPLOAD_MAX_AGE_MS],
+    [OUT_DIR, OUTPUT_MAX_AGE_MS],
+  ] as const) {
+    const entries = await readdir(dir).catch(() => [] as string[]);
+    for (const entry of entries) {
+      const p = path.join(dir, entry);
+      const s = await stat(p).catch(() => null);
+      if (s && now - s.mtimeMs > maxAge) {
+        await rm(p, { recursive: true, force: true }).catch(() => undefined);
+      }
+    }
+  }
+}
 
 export function isLocalDemucsEnabled(): boolean {
   return process.env.LOCAL_DEMUCS === "1";
@@ -24,6 +44,7 @@ type LocalJob =
 const jobs = new Map<string, LocalJob>();
 
 export async function saveLocalUpload(buf: Buffer): Promise<string> {
+  void sweepOldFiles();
   await mkdir(UPLOAD_DIR, { recursive: true });
   const id = randomUUID();
   const filePath = path.join(UPLOAD_DIR, `${id}.audio`);
@@ -43,16 +64,18 @@ function demucsCommand(): string {
 /** Startet die lokale Trennung als Kindprozess; gibt die Job-ID zurück. */
 export function startLocalSeparation(uploadId: string): string {
   const inputPath = uploads.get(uploadId);
+  uploads.delete(uploadId);
   const jobId = `local-${randomUUID()}`;
   if (!inputPath) {
     jobs.set(jobId, { status: "failed", error: "Upload nicht gefunden" });
     return jobId;
   }
   jobs.set(jobId, { status: "processing" });
+  const jobOutDir = path.join(OUT_DIR, jobId);
 
   const child = spawn(
     demucsCommand(),
-    ["-n", "htdemucs_6s", "--mp3", "--mp3-bitrate", "192", "-o", OUT_DIR, inputPath],
+    ["-n", "htdemucs_6s", "--mp3", "--mp3-bitrate", "192", "-o", jobOutDir, inputPath],
     {
       stdio: "ignore",
       env: { ...process.env, PATH: `${process.env.PATH ?? ""}:${path.join(homedir(), ".local", "bin")}` },
@@ -67,12 +90,11 @@ export function startLocalSeparation(uploadId: string): string {
     void (async () => {
       // Upload-Datei nach der Trennung immer aufräumen (Einmal-Session)
       await rm(inputPath, { force: true }).catch(() => undefined);
-      uploads.delete(uploadId);
       if (code !== 0) {
         jobs.set(jobId, { status: "failed", error: `demucs beendet mit Code ${code}` });
         return;
       }
-      const stemDir = path.join(OUT_DIR, "htdemucs_6s", path.basename(inputPath, ".audio"));
+      const stemDir = path.join(jobOutDir, "htdemucs_6s", path.basename(inputPath, ".audio"));
       for (const stem of STEMS) {
         const ok = await stat(path.join(stemDir, `${stem}.mp3`)).catch(() => null);
         if (!ok) {

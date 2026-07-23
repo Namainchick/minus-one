@@ -54,6 +54,33 @@ afterEach(() => {
   delete process.env.LOCAL_DEMUCS;
 });
 
+describe("startLocalSeparation (echtes Modul)", () => {
+  it("beansprucht den Upload sofort — zweiter Start desselben Uploads schlägt fehl", async () => {
+    process.env.DEMUCS_BIN = "/usr/bin/true";
+    const real = await vi.importActual<typeof import("@/lib/local-demucs")>("@/lib/local-demucs");
+    const uploadId = await real.saveLocalUpload(Buffer.from("x"));
+    const job1 = real.startLocalSeparation(uploadId);
+    const job2 = real.startLocalSeparation(uploadId);
+    expect(job1).not.toBe(job2);
+    expect(real.getLocalUploadPath(uploadId)).toBeNull();
+    // job2 wurde ohne Upload gestartet -> failed
+    expect(real.getLocalJob(job2).status).toBe("failed");
+    delete process.env.DEMUCS_BIN;
+  });
+
+  it("meldet failed, wenn der Demucs-Output keine Stems enthält", async () => {
+    process.env.DEMUCS_BIN = "/usr/bin/true";
+    const real = await vi.importActual<typeof import("@/lib/local-demucs")>("@/lib/local-demucs");
+    const uploadId = await real.saveLocalUpload(Buffer.from("x"));
+    const job = real.startLocalSeparation(uploadId);
+    // /usr/bin/true beendet sofort mit 0, erzeugt aber keine Stems
+    await vi.waitFor(() => {
+      expect(real.getLocalJob(job).status).toBe("failed");
+    });
+    delete process.env.DEMUCS_BIN;
+  });
+});
+
 describe("local mode", () => {
   it("lehnt local:// ab, wenn der Modus aus ist", async () => {
     delete process.env.LOCAL_DEMUCS;

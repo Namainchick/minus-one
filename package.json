@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "dev:local": "LOCAL_DEMUCS=1 NEXT_PUBLIC_LOCAL_UPLOAD=1 DAILY_SEPARATION_LIMIT=999 next dev",
+    "dev:local": "LOCAL_DEMUCS=1 NEXT_PUBLIC_LOCAL_UPLOAD=1 DAILY_SEPARATION_LIMIT=999 next dev -H 127.0.0.1",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

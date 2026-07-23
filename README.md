@@ -22,6 +22,7 @@ Danach den lokalen Modus mit beiden benötigten Env-Flags über das Convenience-
 
 Die Trennung dauert auf Apple Silicon ungefähr 1–2 Minuten pro Song. Dieser Modus
 funktioniert nur lokal auf diesem Mac; die deployte Version verwendet weiterhin Replicate.
+Jobs und Uploads existieren nur im laufenden Dev-Prozess (nach einem Neustart sind sie weg); temporäre Dateien werden automatisch bereinigt (Uploads nach 1 h, Stems nach 24 h).
 
 ## Tests
 
