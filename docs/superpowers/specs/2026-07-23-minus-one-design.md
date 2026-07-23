@@ -1,8 +1,12 @@
-# Stem Splitter — Design-Dokument
+# Minus One — Design-Dokument
 
 **Datum:** 2026-07-23
 **Status:** Vom Nutzer freigegeben (Brainstorming-Session 23.07.2026)
-**Projektordner:** `~/code/stem-player`
+**Projektordner:** `~/code/minus-one`
+
+**Zum Namen:** „Music minus one" ist ein etablierter Begriff für Aufnahmen, bei denen
+genau ein Instrument fehlt, damit man es selbst spielen kann — exakt der
+Anwendungsfall dieser App.
 
 ## 1. Ziel und Kontext
 
@@ -36,7 +40,7 @@ Vorarbeit: Nam hat die Stem-Trennung bereits per CLI mit Metas Open-Source-Model
 Keine Unterseiten, keine Navigation. Der eine Screen verwandelt sich:
 
 ### Zustand 1 — Start
-- Großer Plakat-Titel ("STEM SPLITTER"), Unterzeile "Zerleg deinen Song · Schalte deine Band".
+- Großer Plakat-Titel ("MINUS ONE"), Unterzeile "Zerleg deinen Song · Schalte deine Band".
 - Kleiner schräg gestellter Badge "Built for my band" (erzählt die Entstehungsgeschichte).
 - Zwei Wege nebeneinander:
   - **Upload-Fläche** (Drag & Drop + Dateiauswahl): "MP3 oder WAV hier reinwerfen".
@@ -206,7 +210,6 @@ Demo bleibt auch im Angriffsfall funktionsfähig.
 
 ## 11. Offene kleine Punkte für die Implementierungsphase
 
-- Endgültiger Projektname (Arbeitstitel "Stem Splitter", Ordner `stem-player`).
 - Auswahl des konkreten Demo-Songs (Lizenz beachten, siehe 5).
 - Genaue Kanal-Farbzuordnung und ob die Schalter Pedal-Optik bekommen —
   wird beim UI-Feinschliff am lebenden Prototyp entschieden.
