@@ -3,6 +3,7 @@ import { checkRateLimit, consumeDailyBudget, defaultCounter } from "@/lib/limits
 import { ipFromRequest } from "@/lib/request";
 import { startSeparation } from "@/lib/replicate";
 import { validateAudioBuffer } from "@/lib/validation";
+import { MAX_FILE_BYTES } from "@/lib/stems";
 
 export const runtime = "nodejs";
 
@@ -16,6 +17,30 @@ function isAllowedBlobUrl(url: string): boolean {
   } catch {
     return false;
   }
+}
+
+/** Liest den Body nur bis maxBytes; null = zu groß. Schutz vor Speicher-DoS. */
+async function readBodyCapped(res: Response, maxBytes: number): Promise<Buffer | null> {
+  const contentLength = Number(res.headers.get("content-length") ?? 0);
+  if (contentLength > maxBytes) return null;
+  if (!res.body) {
+    const buf = Buffer.from(await res.arrayBuffer());
+    return buf.byteLength > maxBytes ? null : buf;
+  }
+  const reader = res.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+  return Buffer.concat(chunks);
 }
 
 export async function POST(request: Request): Promise<NextResponse> {
@@ -34,9 +59,10 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   // Im Mock-Modus (E2E/Dev ohne Blob-Store) wird der Download übersprungen.
   if (blobUrl !== MOCK_UPLOAD_URL) {
-    const res = await fetch(blobUrl);
-    if (!res.ok) return NextResponse.json({ error: "bad_request" }, { status: 400 });
-    const buf = Buffer.from(await res.arrayBuffer());
+    const res = await fetch(blobUrl, { signal: AbortSignal.timeout(20_000) }).catch(() => null);
+    if (!res || !res.ok) return NextResponse.json({ error: "bad_request" }, { status: 400 });
+    const buf = await readBodyCapped(res, MAX_FILE_BYTES);
+    if (!buf) return NextResponse.json({ error: "too_large" }, { status: 422 });
     const v = await validateAudioBuffer(buf);
     if (!v.ok) return NextResponse.json({ error: v.reason }, { status: 422 });
   }

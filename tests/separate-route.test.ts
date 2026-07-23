@@ -79,4 +79,34 @@ describe("POST /api/separate", () => {
     expect(res.status).toBe(422);
     expect(await res.json()).toEqual({ error: "bad_format" });
   });
+
+  it("lehnt mock://upload ab, wenn MOCK_REPLICATE nicht gesetzt ist", async () => {
+    delete process.env.MOCK_REPLICATE;
+    const res = await POST(makeRequest({ blobUrl: "mock://upload" }));
+    expect(res.status).toBe(400);
+  });
+
+  it("bricht bei zu großem Content-Length ab, ohne den Body zu laden", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(null, { status: 200, headers: { "content-length": String(16 * 1024 * 1024) } })),
+    );
+    const res = await POST(makeRequest({ blobUrl: BLOB_URL }));
+    expect(res.status).toBe(422);
+    expect(await res.json()).toEqual({ error: "too_large" });
+  });
+
+  it("kappt einen zu großen Body auch ohne Content-Length", async () => {
+    const big = new Uint8Array(15 * 1024 * 1024 + 1);
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(big);
+        controller.close();
+      },
+    });
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(stream, { status: 200 })));
+    const res = await POST(makeRequest({ blobUrl: BLOB_URL }));
+    expect(res.status).toBe(422);
+    expect(await res.json()).toEqual({ error: "too_large" });
+  });
 });

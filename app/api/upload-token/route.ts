@@ -12,7 +12,10 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
-  const body = (await request.json()) as HandleUploadBody;
+  const body = (await request.json().catch(() => null)) as HandleUploadBody | null;
+  if (!body) {
+    return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  }
   try {
     const json = await handleUpload({
       body,
