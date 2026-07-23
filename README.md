@@ -34,7 +34,9 @@ und im Mini-Mischpult die Spuren schalten, die deine Band heute selbst spielt.
 
    Den Hash als `REPLICATE_DEMUCS_VERSION` setzen. Falls die Input-Keys nicht
    `audio`/`model`/`output_format` heißen, `lib/replicate.ts` anpassen.
-5. Push auf `main` → Deploy.
+5. `CRON_SECRET` setzen (beliebiger langer Zufallswert), damit der tägliche
+   Aufräum-Cron nicht öffentlich auslösbar ist.
+6. Push auf `main` → Deploy.
 
 ## Checkliste vor dem ersten Zeigen (manuell)
 
