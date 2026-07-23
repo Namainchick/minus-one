@@ -13,6 +13,12 @@ export function precheckFile(file: File): ClientCheck {
 
 /** Lädt die Datei zu Vercel Blob hoch und gibt die URL zurück (Mock-Modus für E2E/Dev). */
 export async function uploadSong(file: File): Promise<string> {
+  if (process.env.NEXT_PUBLIC_LOCAL_UPLOAD === "1") {
+    const res = await fetch("/api/local-upload", { method: "POST", body: file });
+    if (!res.ok) throw new Error("local upload failed");
+    const { uploadId } = (await res.json()) as { uploadId: string };
+    return `local://${uploadId}`;
+  }
   if (process.env.NEXT_PUBLIC_MOCK_UPLOAD === "1") return "mock://upload";
   const blob = await upload(file.name, file, {
     access: "public",

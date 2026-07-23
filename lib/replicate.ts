@@ -1,4 +1,5 @@
 import Replicate from "replicate";
+import { getLocalJob, isLocalJobId } from "./local-demucs";
 import { STEMS, type StemName } from "./stems";
 
 export type JobStatus =
@@ -91,6 +92,7 @@ export async function getPredictionRaw(id: string): Promise<RawPrediction> {
 }
 
 export async function getJob(id: string): Promise<JobStatus> {
+  if (isLocalJobId(id)) return getLocalJob(id);
   return mapPrediction(await getPredictionRaw(id));
 }
 

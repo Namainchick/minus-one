@@ -10,6 +10,19 @@ und im Mini-Mischpult die Spuren schalten, die deine Band heute selbst spielt.
     ./scripts/make-fixture-stems.sh        # Platzhalter-Demo (braucht ffmpeg)
     MOCK_REPLICATE=1 NEXT_PUBLIC_MOCK_UPLOAD=1 npm run dev
 
+## Lokaler Modus (jeden Song ohne Cloud zerlegen)
+
+Demucs muss lokal installiert sein:
+
+    uv tool install --python 3.12 --with "numpy<2" demucs
+
+Danach den lokalen Modus mit beiden benötigten Env-Flags über das Convenience-Skript starten:
+
+    npm run dev:local
+
+Die Trennung dauert auf Apple Silicon ungefähr 1–2 Minuten pro Song. Dieser Modus
+funktioniert nur lokal auf diesem Mac; die deployte Version verwendet weiterhin Replicate.
+
 ## Tests
 
     npm test          # Vitest (Validierung, Limits, Replicate-Mapping, API-Routen)

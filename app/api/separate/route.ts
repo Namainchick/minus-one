@@ -1,15 +1,19 @@
+import { readFile } from "node:fs/promises";
 import { NextResponse } from "next/server";
 import { checkRateLimit, consumeDailyBudget, defaultCounter } from "@/lib/limits";
+import { getLocalUploadPath, isLocalDemucsEnabled, startLocalSeparation } from "@/lib/local-demucs";
+import { readBodyCapped } from "@/lib/read-body";
 import { ipFromRequest } from "@/lib/request";
 import { startSeparation } from "@/lib/replicate";
-import { validateAudioBuffer } from "@/lib/validation";
 import { MAX_FILE_BYTES } from "@/lib/stems";
+import { validateAudioBuffer } from "@/lib/validation";
 
 export const runtime = "nodejs";
 
 const MOCK_UPLOAD_URL = "mock://upload";
 
 function isAllowedBlobUrl(url: string): boolean {
+  if (isLocalDemucsEnabled() && url.startsWith("local://")) return true;
   if (process.env.MOCK_REPLICATE === "1" && url === MOCK_UPLOAD_URL) return true;
   try {
     const u = new URL(url);
@@ -17,30 +21,6 @@ function isAllowedBlobUrl(url: string): boolean {
   } catch {
     return false;
   }
-}
-
-/** Liest den Body nur bis maxBytes; null = zu groß. Schutz vor Speicher-DoS. */
-async function readBodyCapped(res: Response, maxBytes: number): Promise<Buffer | null> {
-  const contentLength = Number(res.headers.get("content-length") ?? 0);
-  if (contentLength > maxBytes) return null;
-  if (!res.body) {
-    const buf = Buffer.from(await res.arrayBuffer());
-    return buf.byteLength > maxBytes ? null : buf;
-  }
-  const reader = res.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let total = 0;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    total += value.byteLength;
-    if (total > maxBytes) {
-      await reader.cancel();
-      return null;
-    }
-    chunks.push(value);
-  }
-  return Buffer.concat(chunks);
 }
 
 export async function POST(request: Request): Promise<NextResponse> {
@@ -55,6 +35,19 @@ export async function POST(request: Request): Promise<NextResponse> {
   const blobUrl = body?.blobUrl;
   if (typeof blobUrl !== "string" || !isAllowedBlobUrl(blobUrl)) {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  }
+
+  if (blobUrl.startsWith("local://")) {
+    const uploadPath = getLocalUploadPath(blobUrl.slice("local://".length));
+    if (!uploadPath) return NextResponse.json({ error: "bad_request" }, { status: 400 });
+    const buf = await readFile(uploadPath).catch(() => null);
+    if (!buf) return NextResponse.json({ error: "bad_request" }, { status: 400 });
+    const v = await validateAudioBuffer(buf);
+    if (!v.ok) return NextResponse.json({ error: v.reason }, { status: 422 });
+    if (!(await consumeDailyBudget(counter))) {
+      return NextResponse.json({ error: "budget_exhausted" }, { status: 429 });
+    }
+    return NextResponse.json({ jobId: startLocalSeparation(blobUrl.slice("local://".length)) });
   }
 
   // Im Mock-Modus (E2E/Dev ohne Blob-Store) wird der Download übersprungen.
