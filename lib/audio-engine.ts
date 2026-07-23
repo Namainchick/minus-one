@@ -10,6 +10,8 @@ const GAIN_RAMP_S = 0.015;
  * an einer Web-Audio-Graph mit GainNode pro Spur. Spur "vocals" ist Taktgeber,
  * Drift > 40ms wird alle 500ms korrigiert. AudioContext entsteht erst beim
  * ersten play() (Autoplay-Policy).
+ * Eine Instanz pro Song: für einen neuen Song eine neue MultiTrackPlayer-Instanz
+ * erzeugen und die alte per dispose() freigeben — load() darf nur einmal laufen.
  */
 export class MultiTrackPlayer {
   private audio = new Map<StemName, HTMLAudioElement>();
@@ -19,27 +21,38 @@ export class MultiTrackPlayer {
   private ctx: AudioContext | null = null;
   private driftTimer: number | null = null;
   private objectUrls: string[] = [];
+  private failed = false;
 
   async load(urls: Record<StemName, string>, onProgress?: (loadedCount: number) => void): Promise<void> {
     let loaded = 0;
     await Promise.all(
       STEMS.map(async (stem) => {
-        const res = await fetch(urls[stem]);
-        if (!res.ok) throw new Error(`Spur ${stem} konnte nicht geladen werden`);
-        const objectUrl = URL.createObjectURL(await res.blob());
-        this.objectUrls.push(objectUrl);
-        const el = new Audio();
-        el.preload = "auto";
-        el.src = objectUrl;
-        await new Promise<void>((resolve, reject) => {
-          el.addEventListener("loadedmetadata", () => resolve(), { once: true });
-          el.addEventListener("error", () => reject(new Error(`Spur ${stem} ist defekt`)), { once: true });
-        });
-        this.audio.set(stem, el);
-        this.volumes.set(stem, 1);
-        this.enabled.set(stem, true);
-        loaded += 1;
-        onProgress?.(loaded);
+        try {
+          const res = await fetch(urls[stem]);
+          if (!res.ok) throw new Error(`Spur ${stem} konnte nicht geladen werden`);
+          const objectUrl = URL.createObjectURL(await res.blob());
+          if (this.failed) {
+            URL.revokeObjectURL(objectUrl);
+            return;
+          }
+          this.objectUrls.push(objectUrl);
+          const el = new Audio();
+          el.preload = "auto";
+          el.src = objectUrl;
+          await new Promise<void>((resolve, reject) => {
+            el.addEventListener("loadedmetadata", () => resolve(), { once: true });
+            el.addEventListener("error", () => reject(new Error(`Spur ${stem} ist defekt`)), { once: true });
+          });
+          if (this.failed) return;
+          this.audio.set(stem, el);
+          this.volumes.set(stem, 1);
+          this.enabled.set(stem, true);
+          loaded += 1;
+          onProgress?.(loaded);
+        } catch (err) {
+          this.failed = true;
+          throw err;
+        }
       }),
     );
   }
@@ -82,7 +95,12 @@ export class MultiTrackPlayer {
   async play(): Promise<void> {
     this.ensureGraph();
     if (this.ctx && this.ctx.state === "suspended") await this.ctx.resume();
-    await Promise.all([...this.audio.values()].map((el) => el.play()));
+    try {
+      await Promise.all([...this.audio.values()].map((el) => el.play()));
+    } catch (err) {
+      this.pause();
+      throw err;
+    }
     this.startDriftCorrection();
   }
 
