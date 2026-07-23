@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Hero } from "@/components/Hero";
 import { PosterBox } from "@/components/PosterBox";
+import { ProcessingView } from "@/components/ProcessingView";
 import { UploadZone } from "@/components/UploadZone";
 import { MultiTrackPlayer } from "@/lib/audio-engine";
 import { ERROR_MESSAGES, type ErrorCode } from "@/lib/messages";
@@ -111,13 +112,9 @@ export default function Home() {
 
       {state.phase === "start" && <UploadZone onFile={startUpload} onDemo={startDemo} />}
 
-      {state.phase === "uploading" && (
-        <p className="mt-10 text-sm font-bold uppercase">Song wird hochgeladen…</p>
-      )}
+      {state.phase === "uploading" && <ProcessingView label="Song wird hochgeladen…" />}
 
-      {state.phase === "processing" && (
-        <p className="mt-10 text-sm font-bold uppercase">Die Band wird zerlegt…</p>
-      )}
+      {state.phase === "processing" && <ProcessingView label="Die Band wird zerlegt…" />}
 
       {state.phase === "loading-stems" && (
         <p className="mt-10 text-sm font-bold uppercase">
