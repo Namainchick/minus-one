@@ -13,7 +13,7 @@ vi.mock("@/lib/youtube", async (importOriginal) => {
   return {
     ...orig,
     getYoutubeDurationSeconds: vi.fn(async () => 200),
-    downloadYoutubeAudio: vi.fn(async () => "/tmp/fake.mp3"),
+    downloadYoutubeAudio: vi.fn(async () => ({ filePath: "/tmp/fake.mp3", cleanup: async () => undefined })),
   };
 });
 vi.mock("@/lib/local-demucs", async (importOriginal) => {
@@ -41,7 +41,7 @@ const YT_URL = "https://www.youtube.com/watch?v=jNQXAC9IVRw";
 beforeEach(() => {
   process.env.LOCAL_DEMUCS = "1";
   vi.mocked(getYoutubeDurationSeconds).mockResolvedValue(200);
-  vi.mocked(downloadYoutubeAudio).mockResolvedValue("/tmp/fake.mp3");
+  vi.mocked(downloadYoutubeAudio).mockResolvedValue({ filePath: "/tmp/fake.mp3", cleanup: async () => undefined });
 });
 afterEach(() => {
   delete process.env.LOCAL_DEMUCS;

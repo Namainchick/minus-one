@@ -55,6 +55,7 @@ export async function saveLocalUpload(buf: Buffer): Promise<string> {
 
 /** Registriert eine bereits heruntergeladene Datei als Upload (verschiebt sie ins Upload-Verzeichnis). */
 export async function importDownloadedFile(srcPath: string): Promise<string> {
+  void sweepOldFiles();
   await mkdir(UPLOAD_DIR, { recursive: true });
   const id = randomUUID();
   const destPath = path.join(UPLOAD_DIR, `${id}.audio`);

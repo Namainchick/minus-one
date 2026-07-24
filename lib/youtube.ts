@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { mkdtemp } from "node:fs/promises";
+import { mkdtemp, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -53,14 +53,22 @@ export async function getYoutubeDurationSeconds(url: string): Promise<number> {
   return seconds;
 }
 
-/** Lädt die Tonspur als MP3 herunter; gibt den Dateipfad zurück. */
-export async function downloadYoutubeAudio(url: string): Promise<string> {
+/** Lädt die Tonspur als MP3 herunter; der Aufrufer muss anschließend cleanup ausführen. */
+export async function downloadYoutubeAudio(url: string): Promise<{ filePath: string; cleanup: () => Promise<void> }> {
   const dir = await mkdtemp(path.join(tmpdir(), "minus-one-yt-"));
+  const cleanup = () => rm(dir, { recursive: true, force: true });
   const base = path.join(dir, randomUUID());
-  const { code } = await runYtDlp(
-    ["--no-playlist", "-f", "bestaudio", "-x", "--audio-format", "mp3", "--audio-quality", "192K", "--max-filesize", "30M", "-o", `${base}.%(ext)s`, url],
-    180_000,
-  );
-  if (code !== 0) throw new Error("yt-dlp download failed");
-  return `${base}.mp3`;
+  const filePath = `${base}.mp3`;
+  try {
+    const { code } = await runYtDlp(
+      ["--no-playlist", "-f", "bestaudio", "-x", "--audio-format", "mp3", "--audio-quality", "192K", "--max-filesize", "30M", "-o", `${base}.%(ext)s`, url],
+      180_000,
+    );
+    if (code !== 0) throw new Error("yt-dlp download failed");
+    await stat(filePath);
+    return { filePath, cleanup };
+  } catch (error) {
+    await cleanup();
+    throw error;
+  }
 }

@@ -25,9 +25,13 @@ export async function POST(request: Request): Promise<NextResponse> {
     if (duration > MAX_DURATION_SECONDS) {
       return NextResponse.json({ error: "too_long" }, { status: 422 });
     }
-    const filePath = await downloadYoutubeAudio(url);
-    const uploadId = await importDownloadedFile(filePath);
-    return NextResponse.json({ uploadId });
+    const { filePath, cleanup } = await downloadYoutubeAudio(url);
+    try {
+      const uploadId = await importDownloadedFile(filePath);
+      return NextResponse.json({ uploadId });
+    } finally {
+      await cleanup();
+    }
   } catch {
     return NextResponse.json({ error: "youtube_failed" }, { status: 502 });
   }
