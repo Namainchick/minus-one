@@ -24,6 +24,8 @@ Die Trennung dauert auf Apple Silicon ungefähr 1–2 Minuten pro Song. Dieser M
 funktioniert nur lokal auf diesem Mac; die deployte Version verwendet weiterhin Replicate.
 Jobs und Uploads existieren nur im laufenden Dev-Prozess (nach einem Neustart sind sie weg); temporäre Dateien werden automatisch bereinigt (Uploads nach 1 h, Stems nach 24 h).
 
+Der YouTube-Import ist nur im lokalen Modus verfügbar; das Feld erscheint auch nur dort. Er braucht `yt-dlp` (`brew install yt-dlp`), ist für die private Nutzung gedacht und akzeptiert Videos bis maximal 7 Minuten.
+
 ## Tests
 
     npm test          # Vitest (Validierung, Limits, Replicate-Mapping, API-Routen)

@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { sniffAudioFormat, validateAudioBuffer } from "@/lib/validation";
 import { MAX_FILE_BYTES } from "@/lib/stems";
@@ -33,6 +34,10 @@ describe("sniffAudioFormat", () => {
   it("erkennt MP3 am Frame-Sync", () => {
     expect(sniffAudioFormat(new Uint8Array([0xff, 0xfb, 0x90, 0, 0, 0, 0, 0, 0, 0, 0, 0]))).toBe("mp3");
   });
+  it("erkennt M4A am ftyp-Header", () => {
+    const fixture = readFileSync(new URL("./fixtures/tiny.m4a", import.meta.url));
+    expect(sniffAudioFormat(new Uint8Array(fixture))).toBe("m4a");
+  });
   it("lehnt anderes ab", () => {
     expect(sniffAudioFormat(new Uint8Array([0x25, 0x50, 0x44, 0x46, 0, 0, 0, 0, 0, 0, 0, 0]))).toBeNull();
   });
@@ -43,6 +48,12 @@ describe("validateAudioBuffer", () => {
     const r = await validateAudioBuffer(makeWav(5));
     expect(r).toMatchObject({ ok: true });
     if (r.ok) expect(r.durationSeconds).toBeGreaterThan(4);
+  });
+  it("akzeptiert M4A und liefert Dauer", async () => {
+    const fixture = readFileSync(new URL("./fixtures/tiny.m4a", import.meta.url));
+    const r = await validateAudioBuffer(fixture);
+    expect(r).toMatchObject({ ok: true });
+    if (r.ok) expect(r.durationSeconds).toBeGreaterThan(1);
   });
   it("lehnt zu große Dateien ab", async () => {
     const r = await validateAudioBuffer(Buffer.alloc(MAX_FILE_BYTES + 1));

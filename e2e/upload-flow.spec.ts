@@ -16,7 +16,7 @@ test("Upload durchläuft Processing und landet im Player", async ({ page }) => {
   await page.goto("/");
 
   await page
-    .getByRole("button", { name: /mp3 oder wav hier reinwerfen/i })
+    .getByRole("button", { name: /mp3, wav oder m4a hier reinwerfen/i })
     .locator("input[type=file]")
     .setInputFiles({ name: "probe.wav", mimeType: "audio/wav", buffer: makeWavBuffer(3) });
 
@@ -33,7 +33,7 @@ test("Zu große Datei zeigt Poster-Fehlerbox mit Demo-Ausweg", async ({ page }) 
   const big = Buffer.alloc(15 * 1024 * 1024 + 1);
   big.write("ID3", 0);
   await page
-    .getByRole("button", { name: /mp3 oder wav hier reinwerfen/i })
+    .getByRole("button", { name: /mp3, wav oder m4a hier reinwerfen/i })
     .locator("input[type=file]")
     .setInputFiles({ name: "riesig.mp3", mimeType: "audio/mpeg", buffer: big });
 
@@ -47,7 +47,7 @@ test("Zu große Datei zeigt Poster-Fehlerbox mit Demo-Ausweg", async ({ page }) 
 test("Falsches Format zeigt Poster-Fehlerbox", async ({ page }) => {
   await page.goto("/");
   await page
-    .getByRole("button", { name: /mp3 oder wav hier reinwerfen/i })
+    .getByRole("button", { name: /mp3, wav oder m4a hier reinwerfen/i })
     .locator("input[type=file]")
     .setInputFiles({ name: "notiz.txt", mimeType: "text/plain", buffer: Buffer.from("kein audio") });
   const alert = page.getByRole("alert").filter({ has: page.getByRole("heading") });
@@ -60,7 +60,7 @@ test("Rate-Limit zeigt Poster-Box ohne Retry, Demo bleibt erreichbar", async ({ 
   );
   await page.goto("/");
   await page
-    .getByRole("button", { name: /mp3 oder wav hier reinwerfen/i })
+    .getByRole("button", { name: /mp3, wav oder m4a hier reinwerfen/i })
     .locator("input[type=file]")
     .setInputFiles({ name: "probe.wav", mimeType: "audio/wav", buffer: makeWavBuffer(3) });
   const alert = page.getByRole("alert").filter({ has: page.getByRole("heading") });
@@ -75,7 +75,7 @@ test("Budget aufgebraucht zeigt Poster-Box ohne Retry", async ({ page }) => {
   );
   await page.goto("/");
   await page
-    .getByRole("button", { name: /mp3 oder wav hier reinwerfen/i })
+    .getByRole("button", { name: /mp3, wav oder m4a hier reinwerfen/i })
     .locator("input[type=file]")
     .setInputFiles({ name: "probe.wav", mimeType: "audio/wav", buffer: makeWavBuffer(3) });
   const alert = page.getByRole("alert").filter({ has: page.getByRole("heading") });
@@ -86,7 +86,7 @@ test("Budget aufgebraucht zeigt Poster-Box ohne Retry", async ({ page }) => {
 test("Demo-Ausweg während der Verarbeitung führt in den Player", async ({ page }) => {
   await page.goto("/");
   await page
-    .getByRole("button", { name: /mp3 oder wav hier reinwerfen/i })
+    .getByRole("button", { name: /mp3, wav oder m4a hier reinwerfen/i })
     .locator("input[type=file]")
     .setInputFiles({ name: "probe.wav", mimeType: "audio/wav", buffer: makeWavBuffer(3) });
   const processing = page.getByTestId("processing");

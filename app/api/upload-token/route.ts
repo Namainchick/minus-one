@@ -21,7 +21,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       body,
       request,
       onBeforeGenerateToken: async () => ({
-        allowedContentTypes: ["audio/mpeg", "audio/wav", "audio/x-wav", "audio/wave"],
+        allowedContentTypes: ["audio/mpeg", "audio/wav", "audio/x-wav", "audio/wave", "audio/mp4", "audio/x-m4a"],
         maximumSizeInBytes: MAX_FILE_BYTES,
         addRandomSuffix: true,
       }),

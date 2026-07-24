@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { createReadStream } from "node:fs";
-import { mkdir, readdir, rm, stat, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readdir, rename, rm, stat, writeFile } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import path from "node:path";
 import { Readable } from "node:stream";
@@ -50,6 +50,19 @@ export async function saveLocalUpload(buf: Buffer): Promise<string> {
   const filePath = path.join(UPLOAD_DIR, `${id}.audio`);
   await writeFile(filePath, buf);
   uploads.set(id, filePath);
+  return id;
+}
+
+/** Registriert eine bereits heruntergeladene Datei als Upload (verschiebt sie ins Upload-Verzeichnis). */
+export async function importDownloadedFile(srcPath: string): Promise<string> {
+  await mkdir(UPLOAD_DIR, { recursive: true });
+  const id = randomUUID();
+  const destPath = path.join(UPLOAD_DIR, `${id}.audio`);
+  await rename(srcPath, destPath).catch(async () => {
+    await copyFile(srcPath, destPath);
+    await rm(srcPath, { force: true });
+  });
+  uploads.set(id, destPath);
   return id;
 }
 

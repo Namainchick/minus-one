@@ -31,14 +31,14 @@ export function UploadZone({ onFile, onDemo }: Props) {
           dragging ? "bg-poster-yellow" : "bg-white"
         }`}
       >
-        <span className="block text-base font-bold uppercase">MP3 oder WAV hier reinwerfen</span>
+        <span className="block text-base font-bold uppercase">MP3, WAV oder M4A hier reinwerfen</span>
         <span className="mt-1 block text-xs text-neutral-500">
           max. 15 MB · max. 7 Minuten · dauert ~1 Minute
         </span>
         <input
           ref={inputRef}
           type="file"
-          accept=".mp3,.wav,audio/mpeg,audio/wav"
+          accept=".mp3,.wav,.m4a,audio/mpeg,audio/wav,audio/mp4,audio/x-m4a"
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0];

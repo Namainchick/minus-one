@@ -6,6 +6,7 @@ import { PlayerView } from "@/components/PlayerView";
 import { PosterBox } from "@/components/PosterBox";
 import { ProcessingView } from "@/components/ProcessingView";
 import { UploadZone } from "@/components/UploadZone";
+import { YoutubeImport } from "@/components/YoutubeImport";
 import { MultiTrackPlayer } from "@/lib/audio-engine";
 import { ERROR_MESSAGES, type ErrorCode } from "@/lib/messages";
 import { STEMS, type StemName } from "@/lib/stems";
@@ -15,7 +16,7 @@ const PROCESSING_TIMEOUT_MS = 5 * 60 * 1000;
 
 type AppState =
   | { phase: "start" }
-  | { phase: "uploading" }
+  | { phase: "uploading"; label?: string }
   | { phase: "processing"; jobId: string }
   | { phase: "loading-stems"; loaded: number; title: string }
   | { phase: "player"; title: string }
@@ -57,6 +58,22 @@ export default function Home() {
     void loadStems(urls, title);
   }, [loadStems]);
 
+  const requestSeparation = useCallback(async (blobUrl: string) => {
+    const res = await fetch("/api/separate", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ blobUrl }),
+    });
+    if (!res.ok) {
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
+      const code = (body.error ?? "network") as ErrorCode;
+      setState({ phase: "error", code: code in ERROR_MESSAGES ? code : "network" });
+      return;
+    }
+    const { jobId } = (await res.json()) as { jobId: string };
+    setState({ phase: "processing", jobId });
+  }, []);
+
   const startUpload = useCallback(
     async (file: File) => {
       const check = precheckFile(file);
@@ -67,24 +84,36 @@ export default function Home() {
       setState({ phase: "uploading" });
       try {
         const blobUrl = await uploadSong(file);
-        const res = await fetch("/api/separate", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ blobUrl }),
-        });
-        if (!res.ok) {
-          const body = (await res.json().catch(() => ({}))) as { error?: string };
-          const code = (body.error ?? "network") as ErrorCode;
-          setState({ phase: "error", code: code in ERROR_MESSAGES ? code : "network" });
-          return;
-        }
-        const { jobId } = (await res.json()) as { jobId: string };
-        setState({ phase: "processing", jobId });
+        await requestSeparation(blobUrl);
       } catch {
         setState({ phase: "error", code: "network" });
       }
     },
-    [],
+    [requestSeparation],
+  );
+
+  const startYoutube = useCallback(
+    async (url: string) => {
+      setState({ phase: "uploading", label: "Song wird von YouTube geholt…" });
+      try {
+        const res = await fetch("/api/youtube-import", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ url }),
+        });
+        if (!res.ok) {
+          const body = (await res.json().catch(() => ({}))) as { error?: string };
+          const code = (body.error ?? "youtube_failed") as ErrorCode;
+          setState({ phase: "error", code: code in ERROR_MESSAGES ? code : "youtube_failed" });
+          return;
+        }
+        const { uploadId } = (await res.json()) as { uploadId: string };
+        await requestSeparation(`local://${uploadId}`);
+      } catch {
+        setState({ phase: "error", code: "network" });
+      }
+    },
+    [requestSeparation],
   );
 
   // Polling während der Verarbeitung
@@ -126,7 +155,11 @@ export default function Home() {
 
       {state.phase === "start" && <UploadZone onFile={startUpload} onDemo={startDemo} />}
 
-      {state.phase === "uploading" && <ProcessingView label="Song wird hochgeladen…" />}
+      {state.phase === "start" && process.env.NEXT_PUBLIC_LOCAL_UPLOAD === "1" && (
+        <YoutubeImport onImport={startYoutube} />
+      )}
+
+      {state.phase === "uploading" && <ProcessingView label={state.label ?? "Song wird hochgeladen…"} />}
 
       {state.phase === "processing" && <ProcessingView label="Die Band wird zerlegt…" onDemo={startDemo} />}
 

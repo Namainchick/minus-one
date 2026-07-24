@@ -5,6 +5,7 @@ export type ErrorCode =
   | "rate_limited"
   | "budget_exhausted"
   | "processing_failed"
+  | "youtube_failed"
   | "network";
 
 export const ERROR_MESSAGES: Record<ErrorCode, { title: string; text: string }> = {
@@ -14,7 +15,7 @@ export const ERROR_MESSAGES: Record<ErrorCode, { title: string; text: string }> 
   },
   bad_format: {
     title: "FALSCHES FORMAT",
-    text: "Nur MP3 oder WAV. Andere Formate versteht die Bühne hier nicht.",
+    text: "Nur MP3, WAV oder M4A. Andere Formate versteht die Bühne hier nicht.",
   },
   too_long: {
     title: "ZU LANG",
@@ -31,6 +32,10 @@ export const ERROR_MESSAGES: Record<ErrorCode, { title: string; text: string }> 
   processing_failed: {
     title: "DA IST WAS SCHIEFGELAUFEN",
     text: "Die Trennung ist fehlgeschlagen. Versuch es nochmal — oder nimm den Demo-Song.",
+  },
+  youtube_failed: {
+    title: "YOUTUBE STREIKT",
+    text: "Das Video ließ sich nicht laden. Prüf den Link — oder lad die Datei direkt hoch.",
   },
   network: {
     title: "VERBINDUNG WEG",
