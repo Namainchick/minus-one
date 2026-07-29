@@ -33,8 +33,9 @@ let defaultInstance: Counter | null = null;
 /** In Produktion Pflicht: Upstash-Env-Vars. Ohne sie: In-Memory (nur Dev/E2E). */
 export function defaultCounter(): Counter {
   if (defaultInstance) return defaultInstance;
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  // Klassische Upstash-Namen oder die KV_*-Namen der Vercel-Marketplace-Integration.
+  const url = process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
   if (url && token) {
     defaultInstance = new RedisCounter(new Redis({ url, token }));
   } else {

@@ -8,6 +8,8 @@ afterEach(() => {
   delete process.env.VERCEL_ENV;
   delete process.env.UPSTASH_REDIS_REST_URL;
   delete process.env.UPSTASH_REDIS_REST_TOKEN;
+  delete process.env.KV_REST_API_URL;
+  delete process.env.KV_REST_API_TOKEN;
 });
 
 describe("checkRateLimit", () => {
@@ -57,5 +59,23 @@ describe("defaultCounter", () => {
     delete process.env.UPSTASH_REDIS_REST_TOKEN;
     const { defaultCounter } = await import("@/lib/limits");
     expect(() => defaultCounter()).toThrow(/Upstash/);
+  });
+
+  it("akzeptiert die klassischen Upstash-Variablennamen", async () => {
+    vi.resetModules();
+    process.env.VERCEL_ENV = "production";
+    process.env.UPSTASH_REDIS_REST_URL = "https://example.upstash.io";
+    process.env.UPSTASH_REDIS_REST_TOKEN = "token";
+    const { defaultCounter, RedisCounter } = await import("@/lib/limits");
+    expect(defaultCounter()).toBeInstanceOf(RedisCounter);
+  });
+
+  it("akzeptiert die KV-Variablennamen der Vercel-Marketplace-Integration", async () => {
+    vi.resetModules();
+    process.env.VERCEL_ENV = "production";
+    process.env.KV_REST_API_URL = "https://example.upstash.io";
+    process.env.KV_REST_API_TOKEN = "token";
+    const { defaultCounter, RedisCounter } = await import("@/lib/limits");
+    expect(defaultCounter()).toBeInstanceOf(RedisCounter);
   });
 });
