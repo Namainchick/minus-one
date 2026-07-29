@@ -22,6 +22,9 @@ export class MultiTrackPlayer {
   private driftTimer: number | null = null;
   private objectUrls: string[] = [];
   private failed = false;
+  private seekGeneration = 0;
+  private seekActive = false;
+  private resumeAfterSeek = false;
 
   async load(urls: Record<StemName, string>, onProgress?: (loadedCount: number) => void): Promise<void> {
     let loaded = 0;
@@ -92,31 +95,93 @@ export class MultiTrackPlayer {
     return !!m && !m.paused;
   }
 
-  async play(): Promise<void> {
+  private async playElements(): Promise<void> {
     this.ensureGraph();
     if (this.ctx && this.ctx.state === "suspended") await this.ctx.resume();
     try {
       await Promise.all([...this.audio.values()].map((el) => el.play()));
     } catch (err) {
-      this.pause();
+      this.pauseElements();
       throw err;
     }
     this.startDriftCorrection();
   }
 
-  pause(): void {
+  private pauseElements(): void {
     for (const el of this.audio.values()) el.pause();
     this.stopDriftCorrection();
   }
 
-  seek(seconds: number): void {
-    const wasPlaying = this.playing;
-    if (wasPlaying) this.pause();
-    for (const el of this.audio.values()) el.currentTime = seconds;
-    if (wasPlaying) {
-      this.play().catch(() => {
-        // play() hat bereits pausiert — Zustand bleibt konsistent, kein unhandled rejection.
-      });
+  async play(): Promise<void> {
+    this.seekGeneration += 1;
+    this.seekActive = false;
+    this.resumeAfterSeek = false;
+    await this.playElements();
+  }
+
+  pause(): void {
+    this.seekGeneration += 1;
+    this.seekActive = false;
+    this.resumeAfterSeek = false;
+    this.pauseElements();
+  }
+
+  beginSeek(): void {
+    if (this.seekActive) return;
+    this.seekActive = true;
+    this.resumeAfterSeek = this.resumeAfterSeek || this.playing;
+    this.seekGeneration += 1;
+    this.pauseElements();
+  }
+
+  private seekElement(el: HTMLAudioElement, seconds: number): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const cleanup = () => {
+        el.removeEventListener("seeked", finishWhenReady);
+        el.removeEventListener("canplay", finish);
+        el.removeEventListener("error", fail);
+      };
+      const finish = () => {
+        cleanup();
+        resolve();
+      };
+      const finishWhenReady = () => {
+        if (el.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) finish();
+        else el.addEventListener("canplay", finish, { once: true });
+      };
+      const fail = () => {
+        cleanup();
+        reject(new Error("Spur konnte nicht positioniert werden"));
+      };
+
+      el.addEventListener("error", fail, { once: true });
+      if (!el.seeking && Math.abs(el.currentTime - seconds) < 0.001) {
+        finishWhenReady();
+        return;
+      }
+      el.addEventListener("seeked", finishWhenReady, { once: true });
+      el.currentTime = seconds;
+    });
+  }
+
+  async commitSeek(seconds: number): Promise<void> {
+    if (!this.seekActive) this.beginSeek();
+    this.seekActive = false;
+    const generation = ++this.seekGeneration;
+    const duration = this.duration;
+    const finiteSeconds = Number.isFinite(seconds) ? seconds : 0;
+    const target = Math.max(0, Number.isFinite(duration) && duration > 0 ? Math.min(finiteSeconds, duration) : finiteSeconds);
+
+    try {
+      await Promise.all([...this.audio.values()].map((el) => this.seekElement(el, target)));
+      if (generation !== this.seekGeneration) return;
+      if (this.resumeAfterSeek) await this.playElements();
+      if (generation === this.seekGeneration) this.resumeAfterSeek = false;
+    } catch (err) {
+      if (generation !== this.seekGeneration) return;
+      this.resumeAfterSeek = false;
+      this.pauseElements();
+      throw err;
     }
   }
 
@@ -158,6 +223,7 @@ export class MultiTrackPlayer {
 
   dispose(): void {
     this.pause();
+    this.seekGeneration += 1;
     for (const url of this.objectUrls) URL.revokeObjectURL(url);
     this.objectUrls = [];
     this.audio.clear();
