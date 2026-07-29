@@ -225,7 +225,7 @@ git push origin feature/minus-one-v1
 - Vercel project: `minus-one`
 - Public Blob store: `minus-one`
 
-- [ ] **Step 1: Create and link the Vercel project**
+- [x] **Step 1: Create and link the Vercel project**
 
 ```bash
 npx vercel projects add minus-one
@@ -234,7 +234,7 @@ npx vercel link --yes --project minus-one
 
 Expected: `.vercel/project.json` exists and remains git-ignored.
 
-- [ ] **Step 2: Create and connect the Blob store**
+- [x] **Step 2: Create and connect the Blob store**
 
 ```bash
 npx vercel blob create-store minus-one \
@@ -248,11 +248,11 @@ npx vercel blob create-store minus-one \
 
 Expected: the store is connected to the linked project and supplies `BLOB_READ_WRITE_TOKEN` to all three environments.
 
-- [ ] **Step 3: Add preview and production configuration without printing secrets**
+- [x] **Step 3: Add preview and production configuration without printing secrets**
 
 Use the RunPod key from macOS Keychain and pipe values into `vercel env add`. Configure `SEPARATION_PROVIDER`, `RUNPOD_API_KEY`, `RUNPOD_ENDPOINT_ID`, `DAILY_SEPARATION_LIMIT`, and a generated `CRON_SECRET` for preview and production. Never pass the RunPod key as a command-line argument or print it.
 
-- [ ] **Step 4: Pull development env locally**
+- [x] **Step 4: Pull development env locally**
 
 ```bash
 npx vercel env pull .env.local --environment development --yes
@@ -267,7 +267,7 @@ Expected: `.env.local` contains Blob configuration and stays ignored. RunPod cre
 - Timing result for `tests/fixtures/tiny.m4a`
 - Six downloaded MP3 stems
 
-- [ ] **Step 1: Deploy a preview**
+- [x] **Step 1: Deploy a preview**
 
 ```bash
 npx vercel deploy --yes
@@ -275,11 +275,11 @@ npx vercel deploy --yes
 
 Expected: deployment reaches Ready and returns an HTTPS preview URL.
 
-- [ ] **Step 2: Run a real browser upload**
+- [x] **Step 2: Run a real browser upload**
 
 Use Playwright against the preview URL. Upload `tests/fixtures/tiny.m4a`, capture timestamps for upload start, processing start, player visible, and all six stem downloads complete. Record browser console/network failures.
 
-- [ ] **Step 3: Capture RunPod provider metrics**
+- [x] **Step 3: Capture RunPod provider metrics**
 
 Use the returned job ID and securely stored API key to retrieve `delayTime` and `executionTime`. Correlate:
 
@@ -293,10 +293,12 @@ stemLoadMs
 totalUploadToPlayerMs
 ```
 
-- [ ] **Step 4: Validate outputs**
+- [x] **Step 4: Validate outputs**
 
 Download all six same-origin stem endpoints, run `ffprobe`, and require positive equal durations and valid MP3 decoding.
 
-- [ ] **Step 5: Report the measured result and remaining production gate**
+- [x] **Step 5: Report the measured result and remaining production gate**
 
 Report exact timings. Preview may use in-memory limits; production deployment remains blocked until Upstash Redis is connected, because production intentionally refuses to run without shared rate limits.
+
+Measured preview evidence (`tests/fixtures/tiny.m4a`, job `ca5d83e0-ee06-4b46-ab17-2a22afce5cbb-u2`): Blob upload plus validation/submission 1,934 ms; RunPod delay 16 ms; RunPod execution 3,992 ms; upload-to-player 10,258 ms; complete validation downloads 13,544 ms. All six outputs decode as distinct 191,999-bit/s MP3 files with equal 2.063667-second duration.
