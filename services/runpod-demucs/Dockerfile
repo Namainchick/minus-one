@@ -13,7 +13,8 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY services/runpod-demucs/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir --break-system-packages -r requirements.txt \
+RUN pip uninstall --yes --break-system-packages spin \
+    && pip install --no-cache-dir --break-system-packages -r requirements.txt \
     && pip check \
     && python -c 'import torch; assert torch.__version__ == "2.13.0+cu126", torch.__version__; assert torch.version.cuda == "12.6", torch.version.cuda'
 

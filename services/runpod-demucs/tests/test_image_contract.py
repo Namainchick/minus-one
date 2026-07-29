@@ -10,6 +10,14 @@ BASE_IMAGE = (
 )
 
 
+def test_image_removes_unused_incompatible_spin_before_dependency_check():
+    dockerfile = DOCKERFILE.read_text()
+    uninstall = "pip uninstall --yes --break-system-packages spin"
+    install = "pip install --no-cache-dir --break-system-packages -r requirements.txt"
+    assert uninstall in dockerfile
+    assert dockerfile.index(uninstall) < dockerfile.index(install) < dockerfile.index("pip check")
+
+
 def test_cuda_image_contract():
     dockerfile = DOCKERFILE.read_text()
 
