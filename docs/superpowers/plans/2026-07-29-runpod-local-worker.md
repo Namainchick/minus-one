@@ -1,6 +1,6 @@
 # RunPod Local Worker Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Build the production-shaped RunPod Demucs worker and prove its contract and audio separation locally before creating a paid GPU endpoint.
 
@@ -29,7 +29,7 @@
 - Create: `services/runpod-demucs/requirements-dev.txt`
 - Test: `services/runpod-demucs/worker.py`
 
-- [ ] **Step 1: Pin runtime and development dependencies**
+- [x] **Step 1: Pin runtime and development dependencies**
 
 Create `requirements.txt`:
 
@@ -47,7 +47,7 @@ Create `requirements-dev.txt`:
 pytest==9.1.1
 ```
 
-- [ ] **Step 2: Write tests for the desired worker API**
+- [x] **Step 2: Write tests for the desired worker API**
 
 The tests import these not-yet-existing names:
 
@@ -101,7 +101,7 @@ def test_process_job_returns_all_stem_urls_and_cleans_temp_dir(tmp_path):
 
 Also test missing upload specs, an omitted output stem, output larger than 20 MB, malformed Blob output URL, exact pathname encoding, API-version/header construction, and scoped token store-ID extraction.
 
-- [ ] **Step 3: Run tests and verify RED**
+- [x] **Step 3: Run tests and verify RED**
 
 Run from `services/runpod-demucs`:
 
@@ -117,7 +117,7 @@ Expected: collection fails because `worker.py` does not exist.
 - Create: `services/runpod-demucs/worker.py`
 - Test: `services/runpod-demucs/tests/test_worker.py`
 
-- [ ] **Step 1: Add constants and input validation**
+- [x] **Step 1: Add constants and input validation**
 
 Define:
 
@@ -135,11 +135,11 @@ class WorkerInputError(ValueError):
 
 `validate_source_url()` accepts only HTTPS URLs whose hostname ends with `.public.blob.vercel-storage.com`. Upload specs must contain a non-empty exact pathname and a `vercel_blob_client_…` token with a parseable store ID.
 
-- [ ] **Step 2: Implement capped streaming download**
+- [x] **Step 2: Implement capped streaming download**
 
 `download_source(url, destination, session=requests)` performs a streaming GET with the 30-second timeout. It rejects non-success responses, declared or actual bodies above 15 MB, and writes chunks without buffering the full song in memory.
 
-- [ ] **Step 3: Implement scoped Vercel Blob upload**
+- [x] **Step 3: Implement scoped Vercel Blob upload**
 
 `upload_stem(path, spec, session=requests)` rejects files above 20 MB and sends:
 
@@ -154,11 +154,11 @@ x-content-type: audio/mpeg
 
 It validates the JSON response and accepts only HTTPS result URLs under `*.public.blob.vercel-storage.com`.
 
-- [ ] **Step 4: Implement one reusable Demucs separator**
+- [x] **Step 4: Implement one reusable Demucs separator**
 
 `DemucsSeparator(device="cuda")` imports Demucs lazily in its constructor and creates one `demucs.api.Separator(model="htdemucs_6s", device=device)`. Its `separate(source, output_dir)` calls `separate_audio_file`, verifies all six sources, and writes each with `demucs.audio.save_audio(..., bitrate=192)`.
 
-- [ ] **Step 5: Implement job orchestration and cleanup**
+- [x] **Step 5: Implement job orchestration and cleanup**
 
 `process_job(job_input, separator, download=download_source, upload=upload_stem)` validates the complete input before work starts, uses `TemporaryDirectory`, downloads once, separates once, verifies exactly six MP3 files, uploads all six, and returns:
 
@@ -171,7 +171,7 @@ It validates the JSON response and accepts only HTTPS result URLs under `*.publi
 
 Temporary files are removed on success and every failure path.
 
-- [ ] **Step 6: Run tests and verify GREEN**
+- [x] **Step 6: Run tests and verify GREEN**
 
 Run:
 
@@ -187,11 +187,11 @@ Expected: all worker tests pass without downloading PyTorch or requiring a GPU.
 - Create: `services/runpod-demucs/handler.py`
 - Modify: `services/runpod-demucs/tests/test_worker.py`
 
-- [ ] **Step 1: Write a failing handler delegation test**
+- [x] **Step 1: Write a failing handler delegation test**
 
 Mock the module separator and `process_job`, call `handler({"input": valid_job_input()})`, and assert that only the `input` object is delegated. Add a malformed-event test that expects `WorkerInputError`.
 
-- [ ] **Step 2: Run the handler tests and verify RED**
+- [x] **Step 2: Run the handler tests and verify RED**
 
 Run:
 
@@ -201,7 +201,7 @@ uv run --python 3.12 --with pytest==9.1.1 --with requests==2.34.2 --with runpod=
 
 Expected: FAIL because `handler.py` does not exist.
 
-- [ ] **Step 3: Implement the thin entrypoint**
+- [x] **Step 3: Implement the thin entrypoint**
 
 ```python
 import os
@@ -222,7 +222,7 @@ if __name__ == "__main__":
 
 For tests, patch `DemucsSeparator` before importing the module so model weights are not loaded.
 
-- [ ] **Step 4: Run tests and verify GREEN**
+- [x] **Step 4: Run tests and verify GREEN**
 
 Run the command from Step 2. Expected: all tests pass.
 
@@ -233,15 +233,15 @@ Run the command from Step 2. Expected: all tests pass.
 - Create: `services/runpod-demucs/.gitignore`
 - Create: `services/runpod-demucs/README.md`
 
-- [ ] **Step 1: Add the local smoke CLI**
+- [x] **Step 1: Add the local smoke CLI**
 
 `smoke.py` accepts `input`, `output`, and `--device` arguments, creates `DemucsSeparator`, separates the local file, and fails unless all six non-empty MP3 files exist. It prints each output path and elapsed duration.
 
-- [ ] **Step 2: Add local documentation and ignores**
+- [x] **Step 2: Add local documentation and ignores**
 
 Ignore `.venv/`, `__pycache__/`, `.pytest_cache/`, and `smoke-output/`. Document that this test validates worker code and audio output but does not measure CUDA or RunPod cold starts.
 
-- [ ] **Step 3: Run the complete Python unit suite**
+- [x] **Step 3: Run the complete Python unit suite**
 
 Run:
 
@@ -252,7 +252,7 @@ uv run --python 3.12 --with pytest==9.1.1 --with requests==2.34.2 --with runpod=
 
 Expected: all tests pass.
 
-- [ ] **Step 4: Run real Demucs on the tiny fixture**
+- [x] **Step 4: Run real Demucs on the tiny fixture**
 
 Run from the repository root:
 
@@ -270,7 +270,7 @@ uv run --python 3.12 \
 
 Expected: six non-empty MP3 files named after `STEMS` and a successful elapsed-time summary.
 
-- [ ] **Step 5: Inspect outputs with ffprobe**
+- [x] **Step 5: Inspect outputs with ffprobe**
 
 Run:
 
@@ -282,7 +282,7 @@ done
 
 Expected: six readable MP3 files with finite positive durations.
 
-- [ ] **Step 6: Run repository validation**
+- [x] **Step 6: Run repository validation**
 
 Run:
 
@@ -294,7 +294,7 @@ npm run build
 
 Expected: existing application checks remain green.
 
-- [ ] **Step 7: Commit the local worker slice**
+- [x] **Step 7: Commit the local worker slice**
 
 ```bash
 git add services/runpod-demucs docs/superpowers/plans/2026-07-29-runpod-local-worker.md
