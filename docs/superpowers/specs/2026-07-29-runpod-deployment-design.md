@@ -184,7 +184,7 @@ Tests cover each boundary separately:
 
 ## Deployment Sequence
 
-1. Build and locally test the RunPod worker image.
+1. Test the RunPod worker locally. Build the CUDA image locally when a safe Docker runtime is available; otherwise use RunPod's GitHub amd64 builder and require its build, startup, and invalid-input runtime gates to pass.
 2. Publish the image through RunPod's GitHub integration or a container registry.
 3. Create the queue-based endpoint with zero active workers and perform a short fixture smoke test.
 4. Benchmark A4000-class, L4/A5000/3090-class, and 4090-class workers on the same song.
