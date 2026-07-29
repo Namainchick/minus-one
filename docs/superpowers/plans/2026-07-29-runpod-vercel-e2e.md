@@ -301,4 +301,6 @@ Download all six same-origin stem endpoints, run `ffprobe`, and require positive
 
 Report exact timings. Preview may use in-memory limits; production deployment remains blocked until Upstash Redis is connected, because production intentionally refuses to run without shared rate limits.
 
+Measured production evidence (`https://minus-one-nine.vercel.app`, job `65dcb0a8-40b2-4acf-b440-d4799c237c2d-u2`): Blob upload plus validation/submission 1,908 ms; RunPod delay 18 ms; RunPod execution 4,607 ms; upload-to-player 10,738 ms; complete validation downloads 13,409 ms. Upstash Redis is connected through the Vercel marketplace integration (KV_* variable names, accepted by `lib/limits.ts`).
+
 Measured preview evidence (`tests/fixtures/tiny.m4a`, job `ca5d83e0-ee06-4b46-ab17-2a22afce5cbb-u2`): Blob upload plus validation/submission 1,934 ms; RunPod delay 16 ms; RunPod execution 3,992 ms; upload-to-player 10,258 ms; complete validation downloads 13,544 ms. All six outputs decode as distinct 191,999-bit/s MP3 files with equal 2.063667-second duration.
