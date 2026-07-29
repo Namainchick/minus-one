@@ -10,9 +10,8 @@ import { YoutubeImport } from "@/components/YoutubeImport";
 import { MultiTrackPlayer } from "@/lib/audio-engine";
 import { ERROR_MESSAGES, type ErrorCode } from "@/lib/messages";
 import { STEMS, type StemName } from "@/lib/stems";
+import { JOB_POLL_INTERVAL_MS, PROCESSING_TIMEOUT_MS } from "@/lib/timing";
 import { precheckFile, uploadSong } from "@/lib/upload";
-
-const PROCESSING_TIMEOUT_MS = 5 * 60 * 1000;
 
 type AppState =
   | { phase: "start" }
@@ -143,7 +142,7 @@ export default function Home() {
       } catch {
         // einzelner Poll-Fehler: weiterpollen
       }
-    }, 3000);
+    }, JOB_POLL_INTERVAL_MS);
     return () => window.clearInterval(timer);
   }, [state, loadStems]);
 

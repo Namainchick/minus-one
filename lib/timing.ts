@@ -1,0 +1,2 @@
+export const PROCESSING_TIMEOUT_MS = 12 * 60 * 1000;
+export const JOB_POLL_INTERVAL_MS = 3000;

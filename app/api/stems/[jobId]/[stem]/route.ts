@@ -1,6 +1,6 @@
 import { isValidJobId } from "@/lib/job-id";
 import { getLocalStemStream, isLocalJobId } from "@/lib/local-demucs";
-import { getStemSourceUrl } from "@/lib/replicate";
+import { getStemSourceUrl } from "@/lib/separation";
 import { STEMS, type StemName } from "@/lib/stems";
 
 export const runtime = "nodejs";

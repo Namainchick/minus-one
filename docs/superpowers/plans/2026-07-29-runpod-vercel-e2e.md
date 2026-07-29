@@ -31,7 +31,7 @@
 - Create: `tests/runpod.test.ts`
 - Test: `lib/runpod.ts`
 
-- [ ] **Step 1: Write the desired RunPod contract tests**
+- [x] **Step 1: Write the desired RunPod contract tests**
 
 Mock `@vercel/blob/client` and global `fetch`. Tests must prove:
 
@@ -58,7 +58,7 @@ Status tests cover:
 - missing stems, non-Blob output URLs, malformed output, unknown states, and invalid job IDs fail closed;
 - idempotent status GET retries at most twice for `429`/`5xx` while `/run` is never retried.
 
-- [ ] **Step 2: Run and verify RED**
+- [x] **Step 2: Run and verify RED**
 
 Run:
 
@@ -74,23 +74,23 @@ Expected: FAIL because `lib/runpod.ts` does not exist.
 - Create: `lib/runpod.ts`
 - Test: `tests/runpod.test.ts`
 
-- [ ] **Step 1: Implement strict environment and URL helpers**
+- [x] **Step 1: Implement strict environment and URL helpers**
 
 Require `RUNPOD_API_KEY` and `RUNPOD_ENDPOINT_ID`. Build URLs only under `https://api.runpod.ai/v2/{endpointId}`. Accept output URLs only when they use HTTPS and a hostname ending in `.public.blob.vercel-storage.com`.
 
-- [ ] **Step 2: Generate six scoped output tokens and submit asynchronously**
+- [x] **Step 2: Generate six scoped output tokens and submit asynchronously**
 
 Use `crypto.randomUUID()` for the output path. Generate one token per canonical `STEMS` entry with the exact constraints from Task 1 and one-hour validity. POST to `/run` once, validate the response job ID with the existing `isValidJobId`, and return only that ID.
 
-- [ ] **Step 3: Implement status retrieval and mapping**
+- [x] **Step 3: Implement status retrieval and mapping**
 
 GET `/status/{id}` with bounded retries on status `429` and `5xx` using 250-ms and 500-ms delays. Map provider states to the existing `JobStatus`. Require six valid output Blob URLs and a valid `inputUrl` on completion.
 
-- [ ] **Step 4: Implement stem source lookup**
+- [x] **Step 4: Implement stem source lookup**
 
 Return a completed stem's validated Blob URL or `null` for incomplete/failed jobs. Never return arbitrary URLs from RunPod output.
 
-- [ ] **Step 5: Run tests and verify GREEN**
+- [x] **Step 5: Run tests and verify GREEN**
 
 Run:
 
@@ -112,7 +112,7 @@ Expected: all RunPod adapter tests pass.
 - Modify: `tests/jobs-route.test.ts`
 - Modify: `tests/stems-route.test.ts`
 
-- [ ] **Step 1: Write failing provider-selection tests**
+- [x] **Step 1: Write failing provider-selection tests**
 
 Mock `lib/replicate`, `lib/runpod`, and local job helpers. Assert:
 
@@ -121,7 +121,7 @@ Mock `lib/replicate`, `lib/runpod`, and local job helpers. Assert:
 - local job IDs always use local status/stream handling before provider selection;
 - unknown provider values throw a clear configuration error.
 
-- [ ] **Step 2: Implement `lib/separation.ts`**
+- [x] **Step 2: Implement `lib/separation.ts`**
 
 Expose the same three methods routes already use:
 
@@ -133,11 +133,11 @@ getStemSourceUrl(id: string, stem: StemName): Promise<string | null>;
 
 Re-export `JobStatus`. Keep `MOCK_REPLICATE=1` working through the default Replicate path.
 
-- [ ] **Step 3: Migrate route imports and mocks**
+- [x] **Step 3: Migrate route imports and mocks**
 
 Change only provider imports from `@/lib/replicate` to `@/lib/separation`. Preserve Node runtime, existing input validation, local Demucs paths, response shapes, and same-origin proxying.
 
-- [ ] **Step 4: Run focused route and provider tests**
+- [x] **Step 4: Run focused route and provider tests**
 
 Run:
 
@@ -156,7 +156,7 @@ Expected: all focused tests pass.
 - Modify: `.env.example`
 - Modify: `README.md`
 
-- [ ] **Step 1: Write the failing timing test**
+- [x] **Step 1: Write the failing timing test**
 
 Require:
 
@@ -165,11 +165,11 @@ expect(PROCESSING_TIMEOUT_MS).toBe(12 * 60 * 1000);
 expect(JOB_POLL_INTERVAL_MS).toBe(3000);
 ```
 
-- [ ] **Step 2: Move timing constants and update polling**
+- [x] **Step 2: Move timing constants and update polling**
 
 Create `lib/timing.ts`, import both constants in `app/page.tsx`, and replace the current hard-coded five-minute timeout and three-second interval.
 
-- [ ] **Step 3: Document server-only environment variables**
+- [x] **Step 3: Document server-only environment variables**
 
 Add:
 
@@ -181,7 +181,7 @@ RUNPOD_ENDPOINT_ID=
 
 Do not prefix secrets with `NEXT_PUBLIC_`. Document Replicate as rollback configuration and local/mock flags as non-production only.
 
-- [ ] **Step 4: Run focused tests**
+- [x] **Step 4: Run focused tests**
 
 Run:
 
@@ -196,7 +196,7 @@ Expected: all focused tests pass.
 **Files:**
 - All files from Tasks 1–4.
 
-- [ ] **Step 1: Run full local quality gates**
+- [x] **Step 1: Run full local quality gates**
 
 ```bash
 npm test
@@ -207,11 +207,11 @@ npm run test:e2e
 
 Expected: all tests pass. The known Next.js file-tracing warning may remain but must not fail the build.
 
-- [ ] **Step 2: Request focused code review**
+- [x] **Step 2: Request focused code review**
 
 Review provider secrets, scoped-token constraints, retry/idempotency behavior, SSRF/output URL validation, route boundaries, local/mock compatibility, and test coverage. Fix all Critical/Important findings.
 
-- [ ] **Step 3: Commit and push**
+- [x] **Step 3: Commit and push**
 
 ```bash
 git add lib app tests .env.example README.md docs/superpowers/plans/2026-07-29-runpod-vercel-e2e.md

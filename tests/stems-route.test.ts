@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/lib/replicate", () => ({
+vi.mock("@/lib/separation", () => ({
   getStemSourceUrl: vi.fn(async () => "https://replicate.delivery/x/vocals.mp3"),
 }));
 
 import { GET } from "@/app/api/stems/[jobId]/[stem]/route";
-import { getStemSourceUrl } from "@/lib/replicate";
+import { getStemSourceUrl } from "@/lib/separation";
 
 function makeParams(jobId: string, stem: string) {
   return { params: Promise.resolve({ jobId, stem }) };

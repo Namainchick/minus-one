@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@/lib/replicate", () => ({
+vi.mock("@/lib/separation", () => ({
   getJob: vi.fn(async () => ({ status: "processing" })),
 }));
 vi.mock("@vercel/blob", () => ({ del: vi.fn(async () => undefined) }));
 
 import { GET } from "@/app/api/jobs/[id]/route";
-import { getJob } from "@/lib/replicate";
+import { getJob } from "@/lib/separation";
 
 const REQ = new Request("http://localhost/api/jobs/j1");
 

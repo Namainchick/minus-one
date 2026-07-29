@@ -4,7 +4,7 @@ import { checkRateLimit, consumeDailyBudget, defaultCounter } from "@/lib/limits
 import { getLocalUploadPath, isLocalDemucsEnabled, startLocalSeparation } from "@/lib/local-demucs";
 import { readBodyCapped } from "@/lib/read-body";
 import { ipFromRequest } from "@/lib/request";
-import { startSeparation } from "@/lib/replicate";
+import { startSeparation } from "@/lib/separation";
 import { MAX_FILE_BYTES } from "@/lib/stems";
 import { validateAudioBuffer } from "@/lib/validation";
 
