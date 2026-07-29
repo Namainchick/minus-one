@@ -26,8 +26,36 @@ test("Demo laden, abspielen, Kanäle schalten, Fader, Seek", async ({ page }) =>
   // Fader bewegen
   await page.getByLabel("DRUMS Lautstärke").fill("0.3");
 
-  // Seek: Zeit springt und läuft weiter
-  await page.getByLabel("Position im Song").fill("10");
+  const position = page.getByLabel("Position im Song");
+
+  // Tastatur-Seek: während der Taste pausiert, erst beim Loslassen weiter
+  await position.focus();
+  await page.keyboard.down("PageUp");
+  await expect(page.getByRole("button", { name: "Abspielen" })).toBeVisible();
+  await page.keyboard.up("PageUp");
+  await expect(page.getByRole("button", { name: "Pause" })).toBeVisible();
+
+  // Pointer-Seek folgt demselben Begin/Preview/Commit-Ablauf.
+  const box = await position.boundingBox();
+  if (!box) throw new Error("Positionsregler hat keine Größe");
+  await page.mouse.move(box.x + box.width * 0.3, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.5, box.y + box.height / 2);
+  await expect(page.getByRole("button", { name: "Abspielen" })).toBeVisible();
+  await page.mouse.up();
+  await expect(page.getByRole("button", { name: "Pause" })).toBeVisible();
+
+  // Touch verwendet dieselben Pointer-Handler.
+  await position.dispatchEvent("pointerdown", { pointerId: 7, pointerType: "touch", bubbles: true });
+  await position.evaluate((element) => {
+    const input = element as HTMLInputElement;
+    input.value = String(Number(input.max) * 0.6);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await expect(page.getByRole("button", { name: "Abspielen" })).toBeVisible();
+  await position.dispatchEvent("pointerup", { pointerId: 7, pointerType: "touch", bubbles: true });
+  await expect(page.getByRole("button", { name: "Pause" })).toBeVisible();
+
   await expect
     .poll(async () => {
       const text = await page.locator("text=/\\d+:\\d\\d \\/ \\d+:\\d\\d/").innerText();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useReducer, useState } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import { ChannelStrip } from "@/components/ChannelStrip";
 import { Transport } from "@/components/Transport";
 import type { MultiTrackPlayer } from "@/lib/audio-engine";
@@ -12,6 +12,8 @@ export function PlayerView({ engine, title }: Props) {
   // Engine ist die Quelle der Wahrheit; forceUpdate spiegelt sie ins UI.
   const [, forceUpdate] = useReducer((x: number) => x + 1, 0);
   const [time, setTime] = useState(0);
+  const [previewTime, setPreviewTime] = useState<number | null>(null);
+  const seekRequestRef = useRef(0);
 
   useEffect(() => {
     const timer = window.setInterval(() => setTime(engine.currentTime), 250);
@@ -23,7 +25,7 @@ export function PlayerView({ engine, title }: Props) {
       <Transport
         title={title}
         playing={engine.playing}
-        currentTime={time}
+        currentTime={previewTime ?? time}
         duration={engine.duration}
         onPlayPause={() => {
           if (engine.playing) {
@@ -38,9 +40,28 @@ export function PlayerView({ engine, title }: Props) {
               .finally(() => forceUpdate());
           }
         }}
-        onSeek={(s) => {
-          engine.seek(s);
-          setTime(s);
+        onSeekStart={() => {
+          seekRequestRef.current += 1;
+          engine.beginSeek();
+          setPreviewTime(engine.currentTime);
+          forceUpdate();
+        }}
+        onSeekPreview={(seconds) => setPreviewTime(seconds)}
+        onSeekCommit={(seconds) => {
+          const request = seekRequestRef.current;
+          setPreviewTime(seconds);
+          setTime(seconds);
+          void engine
+            .commitSeek(seconds)
+            .catch(() => {
+              // Engine hält nach einem Seek-Fehler alle Spuren konsistent pausiert.
+            })
+            .finally(() => {
+              if (seekRequestRef.current !== request) return;
+              setPreviewTime(null);
+              setTime(engine.currentTime);
+              forceUpdate();
+            });
         }}
       />
 
