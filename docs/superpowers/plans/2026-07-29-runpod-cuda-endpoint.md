@@ -130,9 +130,11 @@ Expected: all pinned direct dependencies resolve without conflicts.
 
 Push the current feature branch after tests and review pass. No registry credentials are needed because RunPod clones the private repository through its GitHub integration.
 
-- [ ] **Step 3: Build and inspect through RunPod**
+- [x] **Step 3: Build and inspect through RunPod**
 
 In RunPod, select the pushed branch and `services/runpod-demucs/Dockerfile`. The **Builds** tab must reach `Completed`; its logs must show the `htdemucs_6s cached` build step. The resulting worker must pass RunPod's startup test before any active workers are enabled.
+
+Evidence: the first build exposed an incompatible preinstalled `spin` package and was fixed by commit `f10c7b4`. The next build completed. Async smoke job `90c4d744-240d-4764-a5a2-75e1080f0ee8-e1` started the worker after 75,836 ms and reached the expected controlled `FAILED` state in 101 ms with `WorkerInputError` for the deliberately invalid non-Blob URL.
 
 ### Task 4: Document and prepare the real RunPod endpoint
 
