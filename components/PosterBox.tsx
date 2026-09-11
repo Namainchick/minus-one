@@ -16,14 +16,14 @@ export function PosterBox({ title, text, onRetry, onDemo }: Props) {
             onClick={onRetry}
             className="border-[3px] border-ink bg-white px-4 py-2 text-sm font-bold uppercase shadow-poster transition-transform active:translate-x-1 active:translate-y-1 active:shadow-none"
           >
-            Nochmal versuchen
+            Try again
           </button>
         )}
         <button
           onClick={onDemo}
           className="border-[3px] border-ink bg-poster-red px-4 py-2 text-sm font-bold uppercase text-white shadow-poster transition-transform active:translate-x-1 active:translate-y-1 active:shadow-none"
         >
-          Demo-Song laden
+          Load the demo song
         </button>
       </div>
     </div>

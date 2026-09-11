@@ -10,44 +10,44 @@ export type ErrorCode =
 
 export const ERROR_MESSAGES: Record<ErrorCode, { title: string; text: string }> = {
   too_large: {
-    title: "ZU GROSS",
-    text: "Die Datei ist größer als 15 MB. Exportier den Song kleiner — 192 kbit/s MP3 reicht völlig.",
+    title: "TOO BIG",
+    text: "The file is bigger than 15 MB. Export the song smaller, 192 kbit/s MP3 is plenty.",
   },
   bad_format: {
-    title: "FALSCHES FORMAT",
-    text: "Nur MP3, WAV oder M4A. Andere Formate versteht die Bühne hier nicht.",
+    title: "WRONG FORMAT",
+    text: "MP3, WAV or M4A only. The stage doesn't speak other formats.",
   },
   too_long: {
-    title: "ZU LANG",
-    text: "Maximal 7 Minuten. Prog-Rock-Epen bitte in zwei Teilen.",
+    title: "TOO LONG",
+    text: "7 minutes max. Prog-rock epics in two parts, please.",
   },
   rate_limited: {
-    title: "KURZE PAUSE",
-    text: "Mehr als 3 Songs pro Stunde sind nicht drin — die GPU braucht auch mal Ruhe. Probier solange den Demo-Song.",
+    title: "SHORT BREAK",
+    text: "More than 3 songs per hour won't fly, the GPU needs a break too. Try the demo song in the meantime.",
   },
   budget_exhausted: {
-    title: "TAGESBUDGET AUFGEBRAUCHT",
-    text: "Für heute sind alle Trennungen verbraucht. Morgen geht es weiter — der Demo-Song läuft immer.",
+    title: "DAILY BUDGET USED UP",
+    text: "All separations for today are used up. Back tomorrow. The demo song always works.",
   },
   processing_failed: {
-    title: "DA IST WAS SCHIEFGELAUFEN",
-    text: "Die Trennung ist fehlgeschlagen. Versuch es nochmal — oder nimm den Demo-Song.",
+    title: "SOMETHING WENT WRONG",
+    text: "The separation failed. Try again, or take the demo song.",
   },
   youtube_failed: {
-    title: "YOUTUBE STREIKT",
-    text: "Das Video ließ sich nicht laden. Prüf den Link — oder lad die Datei direkt hoch.",
+    title: "YOUTUBE IS SULKING",
+    text: "The video wouldn't load. Check the link, or upload the file directly.",
   },
   network: {
-    title: "VERBINDUNG WEG",
-    text: "Das Laden hat nicht geklappt. Einmal neu versuchen?",
+    title: "CONNECTION LOST",
+    text: "Loading didn't work. Try once more?",
   },
 };
 
 export const PROCESSING_LINES = [
-  "Sänger wird vom Mikro getrennt…",
-  "Isoliere den Schlagzeuger…",
-  "Bassist wird gesucht (wie immer)…",
-  "Gitarrenkabel werden entwirrt…",
-  "Klavierdeckel wird angehoben…",
-  "Der Rest der Band packt zusammen…",
+  "Unplugging the singer's mic…",
+  "Isolating the drummer…",
+  "Looking for the bassist (as usual)…",
+  "Untangling the guitar cables…",
+  "Lifting the piano lid…",
+  "The rest of the band is packing up…",
 ];

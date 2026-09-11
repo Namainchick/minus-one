@@ -1,0 +1,9 @@
+*
+!services/
+services/*
+!services/runpod-demucs/
+services/runpod-demucs/*
+!services/runpod-demucs/Dockerfile
+!services/runpod-demucs/requirements.txt
+!services/runpod-demucs/worker.py
+!services/runpod-demucs/handler.py

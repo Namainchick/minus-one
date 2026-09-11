@@ -32,7 +32,7 @@ export class MultiTrackPlayer {
       STEMS.map(async (stem) => {
         try {
           const res = await fetch(urls[stem]);
-          if (!res.ok) throw new Error(`Spur ${stem} konnte nicht geladen werden`);
+          if (!res.ok) throw new Error(`Stem ${stem} could not be loaded`);
           const objectUrl = URL.createObjectURL(await res.blob());
           if (this.failed) {
             URL.revokeObjectURL(objectUrl);
@@ -44,7 +44,7 @@ export class MultiTrackPlayer {
           el.src = objectUrl;
           await new Promise<void>((resolve, reject) => {
             el.addEventListener("loadedmetadata", () => resolve(), { once: true });
-            el.addEventListener("error", () => reject(new Error(`Spur ${stem} ist defekt`)), { once: true });
+            el.addEventListener("error", () => reject(new Error(`Stem ${stem} is broken`)), { once: true });
           });
           if (this.failed) return;
           this.audio.set(stem, el);
@@ -151,7 +151,7 @@ export class MultiTrackPlayer {
       };
       const fail = () => {
         cleanup();
-        reject(new Error("Spur konnte nicht positioniert werden"));
+        reject(new Error("Stem could not be positioned"));
       };
 
       el.addEventListener("error", fail, { once: true });

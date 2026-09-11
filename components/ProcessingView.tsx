@@ -36,7 +36,7 @@ export function ProcessingView({ label, onDemo }: Props) {
         » {PROCESSING_LINES[lineIndex]} «
       </p>
       <p className="mt-2 text-xs text-neutral-500">
-        {remaining > 0 ? `noch ~${remaining} Sekunden` : "gleich fertig…"}
+        {remaining > 0 ? `about ${remaining} seconds left` : "almost done…"}
       </p>
       {onDemo && (
         <button
@@ -44,7 +44,7 @@ export function ProcessingView({ label, onDemo }: Props) {
           onClick={onDemo}
           className="mt-8 border-[3px] border-ink bg-poster-red px-4 py-2 text-sm font-bold uppercase text-white shadow-poster transition-transform active:translate-x-1 active:translate-y-1 active:shadow-none"
         >
-          Keine Lust zu warten? Demo-Song laden →
+          Don&apos;t want to wait? Load the demo song →
         </button>
       )}
     </div>

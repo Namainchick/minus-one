@@ -9,13 +9,13 @@ vi.mock("@/lib/limits", async (importOriginal) => {
     consumeDailyBudget: vi.fn(async () => true),
   };
 });
-vi.mock("@/lib/replicate", () => ({
+vi.mock("@/lib/separation", () => ({
   startSeparation: vi.fn(async () => "job-123"),
 }));
 
 import { POST } from "@/app/api/separate/route";
 import { checkRateLimit, consumeDailyBudget } from "@/lib/limits";
-import { startSeparation } from "@/lib/replicate";
+import { startSeparation } from "@/lib/separation";
 
 function makeRequest(body: unknown): Request {
   return new Request("http://localhost/api/separate", {

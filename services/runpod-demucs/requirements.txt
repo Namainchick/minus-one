@@ -1,0 +1,7 @@
+demucs==4.1.0
+lameenc==1.8.4
+numpy==1.26.4
+requests==2.34.2
+runpod==1.11.0
+sphn==0.2.1
+torch==2.13.0

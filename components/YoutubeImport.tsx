@@ -20,7 +20,7 @@ export function YoutubeImport({ onImport }: Props) {
         value={url}
         onChange={(e) => setUrl(e.target.value)}
         placeholder="https://www.youtube.com/watch?v=…"
-        aria-label="YouTube-Link"
+        aria-label="YouTube link"
         className="flex-[2] border-[3px] border-ink bg-white px-4 py-3 text-sm font-medium placeholder:text-neutral-400 focus:outline-none"
       />
       <button

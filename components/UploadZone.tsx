@@ -31,9 +31,9 @@ export function UploadZone({ onFile, onDemo }: Props) {
           dragging ? "bg-poster-yellow" : "bg-white"
         }`}
       >
-        <span className="block text-base font-bold uppercase">MP3, WAV oder M4A hier reinwerfen</span>
+        <span className="block text-base font-bold uppercase">Drop an MP3, WAV or M4A here</span>
         <span className="mt-1 block text-xs text-neutral-500">
-          max. 15 MB · max. 7 Minuten · dauert ~1 Minute
+          max 15 MB · max 7 minutes · takes ~1 minute
         </span>
         <input
           ref={inputRef}
@@ -53,9 +53,9 @@ export function UploadZone({ onFile, onDemo }: Props) {
         onClick={onDemo}
         className="flex-1 border-[3px] border-ink bg-poster-red p-8 text-center text-sm font-bold uppercase text-white shadow-poster-lg transition-transform active:translate-x-1 active:translate-y-1 active:shadow-none"
       >
-        Keine Lust zu warten?
+        Don&apos;t want to wait?
         <br />
-        Demo-Song laden →
+        Load the demo song →
       </button>
     </div>
   );

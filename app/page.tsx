@@ -10,9 +10,8 @@ import { YoutubeImport } from "@/components/YoutubeImport";
 import { MultiTrackPlayer } from "@/lib/audio-engine";
 import { ERROR_MESSAGES, type ErrorCode } from "@/lib/messages";
 import { STEMS, type StemName } from "@/lib/stems";
+import { JOB_POLL_INTERVAL_MS, PROCESSING_TIMEOUT_MS } from "@/lib/timing";
 import { precheckFile, uploadSong } from "@/lib/upload";
-
-const PROCESSING_TIMEOUT_MS = 5 * 60 * 1000;
 
 type AppState =
   | { phase: "start" }
@@ -94,7 +93,7 @@ export default function Home() {
 
   const startYoutube = useCallback(
     async (url: string) => {
-      setState({ phase: "uploading", label: "Song wird von YouTube geholt…" });
+      setState({ phase: "uploading", label: "Fetching the song from YouTube…" });
       try {
         const res = await fetch("/api/youtube-import", {
           method: "POST",
@@ -135,7 +134,7 @@ export default function Home() {
           | { status: "done"; stems: Record<StemName, string> };
         if (job.status === "done") {
           window.clearInterval(timer);
-          void loadStems(job.stems, "Dein Song");
+          void loadStems(job.stems, "Your song");
         } else if (job.status === "failed") {
           window.clearInterval(timer);
           setState({ phase: "error", code: "processing_failed" });
@@ -143,7 +142,7 @@ export default function Home() {
       } catch {
         // einzelner Poll-Fehler: weiterpollen
       }
-    }, 3000);
+    }, JOB_POLL_INTERVAL_MS);
     return () => window.clearInterval(timer);
   }, [state, loadStems]);
 
@@ -159,13 +158,13 @@ export default function Home() {
         <YoutubeImport onImport={startYoutube} />
       )}
 
-      {state.phase === "uploading" && <ProcessingView label={state.label ?? "Song wird hochgeladen…"} />}
+      {state.phase === "uploading" && <ProcessingView label={state.label ?? "Uploading your song…"} />}
 
-      {state.phase === "processing" && <ProcessingView label="Die Band wird zerlegt…" onDemo={startDemo} />}
+      {state.phase === "processing" && <ProcessingView label="Splitting the band…" onDemo={startDemo} />}
 
       {state.phase === "loading-stems" && (
         <p className="mt-10 text-sm font-bold uppercase">
-          Spuren laden… {state.loaded}/{STEMS.length}
+          Loading tracks… {state.loaded}/{STEMS.length}
         </p>
       )}
 

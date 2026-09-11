@@ -81,7 +81,7 @@ export function startLocalSeparation(uploadId: string): string {
   uploads.delete(uploadId);
   const jobId = `local-${randomUUID()}`;
   if (!inputPath) {
-    jobs.set(jobId, { status: "failed", error: "Upload nicht gefunden" });
+    jobs.set(jobId, { status: "failed", error: "Upload not found" });
     return jobId;
   }
   jobs.set(jobId, { status: "processing" });
@@ -97,7 +97,7 @@ export function startLocalSeparation(uploadId: string): string {
   );
 
   child.on("error", (err) => {
-    jobs.set(jobId, { status: "failed", error: `demucs konnte nicht gestartet werden: ${err.message}` });
+    jobs.set(jobId, { status: "failed", error: `demucs could not be started: ${err.message}` });
   });
 
   child.on("close", (code) => {
@@ -105,14 +105,14 @@ export function startLocalSeparation(uploadId: string): string {
       // Upload-Datei nach der Trennung immer aufräumen (Einmal-Session)
       await rm(inputPath, { force: true }).catch(() => undefined);
       if (code !== 0) {
-        jobs.set(jobId, { status: "failed", error: `demucs beendet mit Code ${code}` });
+        jobs.set(jobId, { status: "failed", error: `demucs exited with code ${code}` });
         return;
       }
       const stemDir = path.join(jobOutDir, "htdemucs_6s", path.basename(inputPath, ".audio"));
       for (const stem of STEMS) {
         const ok = await stat(path.join(stemDir, `${stem}.mp3`)).catch(() => null);
         if (!ok) {
-          jobs.set(jobId, { status: "failed", error: `Spur ${stem} fehlt im Demucs-Output` });
+          jobs.set(jobId, { status: "failed", error: `Stem ${stem} is missing from the Demucs output` });
           return;
         }
       }

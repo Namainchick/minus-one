@@ -1,7 +1,7 @@
 import { del } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { isValidJobId } from "@/lib/job-id";
-import { getJob } from "@/lib/replicate";
+import { getJob } from "@/lib/separation";
 
 export const runtime = "nodejs";
 
