@@ -1,72 +1,90 @@
 # Minus One
 
-Song hochladen, in 6 Instrumente zerlegen (Demucs `htdemucs_6s` via Replicate),
-und im Mini-Mischpult die Spuren schalten, die deine Band heute selbst spielt.
-„Music minus one" — die Band minus das Mitglied, das du ersetzt.
+Upload a song, get it split into six instrument stems on a GPU, and mute the one you play.
+"Music minus one": the band minus the member you are replacing tonight.
 
-## Lokal starten (ohne Kosten)
+Live: https://minus-one-nine.vercel.app
 
-    npm install
-    ./scripts/make-fixture-stems.sh        # Platzhalter-Demo (braucht ffmpeg)
-    MOCK_REPLICATE=1 NEXT_PUBLIC_MOCK_UPLOAD=1 npm run dev
+## What it does
 
-## Lokaler Modus (jeden Song ohne Cloud zerlegen)
+- Takes an MP3, WAV or M4A and splits it into **vocals, drums, bass, guitar, piano and rest**
+  with Demucs (`htdemucs_6s`).
+- Runs the separation on a **serverless GPU worker** (RunPod) behind a provider interface, with
+  Replicate as a second backend for fallback.
+- Plays all six stems **in sync** in the browser through a Web Audio gain graph, with a fader
+  and a mute switch per track, coordinated seeking, and drift correction whenever two tracks
+  drift more than 40 ms apart.
+- Keeps the pipeline honest: one-hour scoped upload tokens, same-origin stem proxying, rate
+  limits, a daily GPU budget, and cleanup jobs (uploads after 1 h, stems after 24 h).
 
-Demucs muss lokal installiert sein:
+About ten seconds from upload to a playable mixer when the GPU worker is warm.
 
-    uv tool install --python 3.12 --with "numpy<2" demucs
+## Run it locally (free, mocked)
 
-Danach den lokalen Modus mit beiden benötigten Env-Flags über das Convenience-Skript starten:
+```bash
+npm install
+./scripts/make-fixture-stems.sh                      # placeholder demo stems, needs ffmpeg
+MOCK_REPLICATE=1 NEXT_PUBLIC_MOCK_UPLOAD=1 npm run dev
+```
 
-    npm run dev:local
+## Local mode: split any song on your own machine
 
-Die Trennung dauert auf Apple Silicon ungefähr 1–2 Minuten pro Song. Dieser Modus
-funktioniert nur lokal auf diesem Mac; die deployte Version verwendet weiterhin Replicate.
-Jobs und Uploads existieren nur im laufenden Dev-Prozess (nach einem Neustart sind sie weg); temporäre Dateien werden automatisch bereinigt (Uploads nach 1 h, Stems nach 24 h).
+Demucs has to be installed locally:
 
-Der YouTube-Import ist nur im lokalen Modus verfügbar; das Feld erscheint auch nur dort. Er braucht `yt-dlp` (`brew install yt-dlp`), ist für die private Nutzung gedacht und akzeptiert Videos bis maximal 7 Minuten.
+```bash
+uv tool install --python 3.12 --with "numpy<2" demucs
+npm run dev:local
+```
+
+Separation takes about one to two minutes per song on Apple Silicon. This mode only works on
+the local machine; the deployed version keeps using the cloud worker. Jobs and uploads live only
+inside the running dev process and are gone after a restart.
+
+The YouTube import exists only in local mode (the field is hidden otherwise). It needs `yt-dlp`
+(`brew install yt-dlp`), is meant for private use, and accepts videos up to seven minutes.
 
 ## Tests
 
-    npm test          # Vitest (Validierung, Limits, Replicate-Mapping, API-Routen)
-    npm run test:e2e  # Playwright (Demo-Flow + Upload-Flow, alles gemockt)
+```bash
+npm test          # Vitest: validation, limits, provider mapping, API routes
+npm run test:e2e  # Playwright: demo flow and upload flow, everything mocked
+```
 
-## Echten Demo-Song einspielen (einmalig, lizenzfreier Track!)
+## Real demo song (once, use a licence-free track)
 
-    scripts/prepare-demo.sh pfad/zum/song.mp3 "Songtitel"
+```bash
+scripts/prepare-demo.sh path/to/song.mp3 "Song title"
+```
 
-(demucs wird über pipx oder ein venv installiert — das Skript erklärt es, falls es fehlt.)
+The script installs Demucs through pipx or a venv and explains what to do if something is missing.
 
 ## Deploy (Vercel + RunPod)
 
-1. Vercel-Projekt anlegen, Repository verbinden und einen öffentlichen Blob-Store verknüpfen.
-2. Upstash Redis anlegen (kostenloser Tarif) und mit Preview sowie Production verbinden.
-3. Den Worker aus `services/runpod-demucs/` als queue-basierten RunPod Serverless Endpoint deployen.
-4. Server-only Env-Vars setzen (siehe `.env.example`):
-   - `SEPARATION_PROVIDER=runpod`
-   - `RUNPOD_API_KEY`
-   - `RUNPOD_ENDPOINT_ID`
-   - `BLOB_READ_WRITE_TOKEN`
-   - beide Upstash-Variablen
-   - `CRON_SECRET`
-5. Lokale und Mock-Flags in Production nicht setzen.
-6. Preview deployen und einen echten Upload bis zu sechs abspielbaren Spuren testen.
-7. Erst nach erfolgreichem Smoke-Test bei RunPod `Max workers = 2` und für niedrige Latenz `Active workers = 1` setzen.
+1. Create the Vercel project, connect the repo, attach a public Blob store.
+2. Create an Upstash Redis database (free tier) and connect it to Preview and Production.
+3. Deploy the worker in `services/runpod-demucs/` as a queue-based RunPod Serverless endpoint.
+4. Set the server-only env vars (see `.env.example`): `SEPARATION_PROVIDER=runpod`,
+   `RUNPOD_API_KEY`, `RUNPOD_ENDPOINT_ID`, `BLOB_READ_WRITE_TOKEN`, both Upstash variables,
+   `CRON_SECRET`.
+5. Never set the local or mock flags in production.
+6. Deploy a preview and test one real upload all the way to six playable tracks.
+7. Only after that smoke test, set `Max workers = 2` on RunPod and `Active workers = 1` for low
+   latency.
 
-Replicate bleibt als Rollback verfügbar: `SEPARATION_PROVIDER=replicate` plus
-`REPLICATE_API_TOKEN` und `REPLICATE_DEMUCS_VERSION` aktivieren den bisherigen Pfad.
+Replicate stays available as a rollback: `SEPARATION_PROVIDER=replicate` plus
+`REPLICATE_API_TOKEN` and `REPLICATE_DEMUCS_VERSION` switch back to the old path.
 
-## E2E-Zeit messen
+## How the end-to-end time is measured
 
-Für einen realen Lauf werden getrennt gemessen: Blob-Upload, Validierung und RunPod-Start,
-RunPod `delayTime`, RunPod `executionTime`, Polling-Overhead und Laden der sechs Stem-Dateien.
-Der Browser gilt erst als fertig, wenn der Player sichtbar ist und alle sechs MP3s geladen wurden.
+A real run is timed in parts: blob upload, validation and RunPod start, RunPod `delayTime`,
+RunPod `executionTime`, polling overhead, and loading the six stem files. The browser counts as
+done only when the player is visible and all six MP3s have loaded.
 
-## Checkliste vor dem ersten Zeigen (manuell)
+## Stack
 
-- [ ] Echter Upload-Durchlauf gegen RunPod in Desktop Chrome
-- [ ] Sechs Stem-Dateien sind abspielbar und gleich lang
-- [ ] Demo-Flow auf iPhone-Safari (Play, Kanal schalten, Fader, Seek)
-- [ ] Rate-Limit greift (4. Upload in einer Stunde → freundliche Box)
-- [ ] RunPod-Ausgabenlimit und Worker-Obergrenze sind gesetzt
-- [ ] Echter Demo-Song (lizenzfrei) statt Platzhalter-Töne eingespielt
+Next.js 16 · TypeScript · Web Audio API · Demucs (PyTorch) · RunPod Serverless · Vercel Blob ·
+Upstash Redis · Vitest · Playwright
+
+## Status
+
+Live and used for band practice. Built spring 2026.
