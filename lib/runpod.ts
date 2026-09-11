@@ -30,13 +30,13 @@ interface CompletedOutput {
 
 function requireEnv(name: "RUNPOD_API_KEY" | "RUNPOD_ENDPOINT_ID"): string {
   const value = process.env[name];
-  if (!value) throw new Error(`${name} fehlt — RunPod kann nicht verwendet werden (siehe .env.example).`);
+  if (!value) throw new Error(`${name} is missing — RunPod cannot be used (see .env.example).`);
   return value;
 }
 
 function endpointBase(): string {
   const endpointId = requireEnv("RUNPOD_ENDPOINT_ID");
-  if (!/^[A-Za-z0-9_-]+$/.test(endpointId)) throw new Error("RUNPOD_ENDPOINT_ID ist ungültig");
+  if (!/^[A-Za-z0-9_-]+$/.test(endpointId)) throw new Error("RUNPOD_ENDPOINT_ID is invalid");
   return `${RUNPOD_API_BASE}/${endpointId}`;
 }
 
@@ -85,7 +85,7 @@ function validateCompletedOutput(output: unknown): CompletedOutput | null {
 async function readJson(response: Response, operation: string): Promise<UnknownRecord> {
   if (!response.ok) throw new Error(`RunPod ${operation} fehlgeschlagen (HTTP ${response.status})`);
   const body = (await response.json().catch(() => null)) as unknown;
-  if (!isRecord(body)) throw new Error(`RunPod ${operation} lieferte keine gültige JSON-Antwort`);
+  if (!isRecord(body)) throw new Error(`RunPod ${operation} returned no valid JSON`);
   return body;
 }
 
@@ -94,7 +94,7 @@ function sleep(ms: number): Promise<void> {
 }
 
 export function mapRunpodJob(job: RawRunpodJob): JobStatus {
-  if (!isValidJobId(job.id)) return { status: "failed", error: "RunPod lieferte eine ungültige Job-ID" };
+  if (!isValidJobId(job.id)) return { status: "failed", error: "RunPod returned an invalid job ID" };
   switch (job.status) {
     case "IN_QUEUE":
       return { status: "queued" };
@@ -103,7 +103,7 @@ export function mapRunpodJob(job: RawRunpodJob): JobStatus {
       return { status: "processing" };
     case "COMPLETED": {
       const output = validateCompletedOutput(job.output);
-      if (!output) return { status: "failed", error: "RunPod-Ergebnis enthält nicht alle gültigen Spuren" };
+      if (!output) return { status: "failed", error: "RunPod result is missing valid stems" };
       return {
         status: "done",
         inputUrl: output.inputUrl,
@@ -123,7 +123,7 @@ export function mapRunpodJob(job: RawRunpodJob): JobStatus {
 }
 
 export async function startRunpodSeparation(audioUrl: string): Promise<string> {
-  if (!isVercelBlobUrl(audioUrl)) throw new Error("RunPod-Eingabe muss eine öffentliche Vercel-Blob-URL sein");
+  if (!isVercelBlobUrl(audioUrl)) throw new Error("RunPod input must be a public Vercel Blob URL");
   const baseUrl = endpointBase();
   const headers = authorizationHeaders();
   const outputId = randomUUID();
@@ -156,12 +156,12 @@ export async function startRunpodSeparation(audioUrl: string): Promise<string> {
   });
   const body = await readJson(response, "Job-Start");
   const id = body.id;
-  if (typeof id !== "string" || !isValidJobId(id)) throw new Error("RunPod lieferte eine ungültige Job-ID");
+  if (typeof id !== "string" || !isValidJobId(id)) throw new Error("RunPod returned an invalid job ID");
   return id;
 }
 
 export async function getRunpodRaw(id: string): Promise<RawRunpodJob> {
-  if (!isValidJobId(id)) throw new Error("RunPod Job-ID ist ungültig");
+  if (!isValidJobId(id)) throw new Error("RunPod job ID is invalid");
   for (let attempt = 0; ; attempt += 1) {
     const response = await fetch(`${endpointBase()}/status/${id}`, {
       headers: authorizationHeaders(),
@@ -175,9 +175,9 @@ export async function getRunpodRaw(id: string): Promise<RawRunpodJob> {
     }
     const body = await readJson(response, "Statusabfrage");
     if (typeof body.id !== "string" || typeof body.status !== "string") {
-      throw new Error("RunPod Statusabfrage lieferte ungültige Felder");
+      throw new Error("RunPod status response has invalid fields");
     }
-    if (body.id !== id) throw new Error("RunPod Statusabfrage lieferte eine abweichende Job-ID");
+    if (body.id !== id) throw new Error("RunPod status response returned a different job ID");
     return body as unknown as RawRunpodJob;
   }
 }

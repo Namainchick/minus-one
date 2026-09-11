@@ -160,7 +160,7 @@ describe("RunPod status retrieval", () => {
 
     vi.useRealTimers();
     fetchMock.mockReset().mockResolvedValue(Response.json({ id: "different-job", status: "IN_QUEUE" }));
-    await expect(getRunpodJob(JOB_ID)).rejects.toThrow(/abweichende Job-ID/);
+    await expect(getRunpodJob(JOB_ID)).rejects.toThrow(/different job ID/);
   });
 
   it("rejects invalid job IDs without fetching", async () => {
@@ -168,7 +168,7 @@ describe("RunPod status retrieval", () => {
     vi.stubGlobal("fetch", fetchMock);
     const { getRunpodJob } = await import("@/lib/runpod");
 
-    await expect(getRunpodJob("../../secret")).rejects.toThrow(/Job-ID/);
+    await expect(getRunpodJob("../../secret")).rejects.toThrow(/job ID/);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 

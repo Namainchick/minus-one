@@ -24,7 +24,7 @@ export function ChannelStrip({ stem, enabled, volume, onToggle, onVolume }: Prop
 
       <button
         type="button"
-        aria-label={`${STEM_LABELS[stem]} an/aus`}
+        aria-label={`${STEM_LABELS[stem]} on/off`}
         aria-pressed={enabled}
         onClick={onToggle}
         className="mx-auto mt-2 flex h-9 w-9 items-center justify-center border-[3px] border-ink transition-transform active:translate-y-0.5"
@@ -42,7 +42,7 @@ export function ChannelStrip({ stem, enabled, volume, onToggle, onVolume }: Prop
       <div className="mt-3 flex h-24 items-center justify-center">
         <input
           type="range"
-          aria-label={`${STEM_LABELS[stem]} Lautstärke`}
+          aria-label={`${STEM_LABELS[stem]} volume`}
           min={0}
           max={1}
           step={0.01}
@@ -53,7 +53,7 @@ export function ChannelStrip({ stem, enabled, volume, onToggle, onVolume }: Prop
         />
       </div>
 
-      <p className={`mt-1 h-4 text-[9px] font-bold ${enabled ? "invisible" : ""}`}>DU SPIELST!</p>
+      <p className={`mt-1 h-4 text-[9px] font-bold ${enabled ? "invisible" : ""}`}>YOU PLAY!</p>
     </div>
   );
 }

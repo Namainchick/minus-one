@@ -14,14 +14,14 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Minus One — Zerleg deinen Song. Schalte deine Band.",
+  title: "Minus One — Split your song. Mute your band.",
   description:
-    "Song hochladen, in 6 Instrumente zerlegen und die Spuren an- und ausschalten, die deine Band heute selbst spielt.",
+    "Upload a song, split it into 6 instruments, and switch off the tracks your band plays themselves tonight.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="de">
+    <html lang="en">
       <body className={`${archivoBlack.variable} ${spaceGrotesk.variable} font-sans antialiased`}>
         {children}
       </body>

@@ -49,7 +49,7 @@ export async function getYoutubeDurationSeconds(url: string): Promise<number> {
   const { code, stdout } = await runYtDlp(["--no-playlist", "--print", "duration", "--skip-download", url], 30_000);
   if (code !== 0) throw new Error("yt-dlp duration check failed");
   const seconds = Number.parseFloat(stdout.trim());
-  if (!Number.isFinite(seconds)) throw new Error("yt-dlp lieferte keine Dauer");
+  if (!Number.isFinite(seconds)) throw new Error("yt-dlp returned no duration");
   return seconds;
 }
 

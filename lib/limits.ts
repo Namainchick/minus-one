@@ -41,7 +41,7 @@ export function defaultCounter(): Counter {
   } else {
     if (process.env.VERCEL_ENV === "production") {
       throw new Error(
-        "Upstash-Env-Vars fehlen in Produktion — Rate-Limit und Tagesbudget wären wirkungslos. Deployment-Konfiguration prüfen.",
+        "Upstash env vars are missing in production — rate limit and daily budget would have no effect. Check the deployment configuration.",
       );
     }
     defaultInstance = new MemoryCounter();

@@ -8,7 +8,7 @@ export function Hero() {
           One
         </h1>
         <p className="mt-3 text-xs font-medium uppercase tracking-[0.3em]">
-          Zerleg deinen Song · Schalte deine Band
+          Split your song · Mute your band
         </p>
       </div>
       <div className="rotate-3 border-[3px] border-ink bg-poster-yellow px-3 py-1.5 text-[11px] font-bold uppercase shadow-poster">

@@ -50,7 +50,7 @@ export function Transport({
     <div className="flex items-center gap-4 border-[3px] border-ink p-4 shadow-poster-lg">
       <button
         type="button"
-        aria-label={playing ? "Pause" : "Abspielen"}
+        aria-label={playing ? "Pause" : "Play"}
         onClick={onPlayPause}
         className="flex h-12 w-12 flex-none items-center justify-center bg-ink text-white transition-transform active:translate-y-0.5"
       >
@@ -72,7 +72,7 @@ export function Transport({
         </div>
         <input
           type="range"
-          aria-label="Position im Song"
+          aria-label="Position in song"
           min={0}
           max={duration || 1}
           step={0.1}

@@ -15,7 +15,7 @@ type SeparationProvider = "replicate" | "runpod";
 function selectedProvider(): SeparationProvider {
   const value = process.env.SEPARATION_PROVIDER ?? "replicate";
   if (value === "replicate" || value === "runpod") return value;
-  throw new Error(`SEPARATION_PROVIDER ist ungültig: ${value}`);
+  throw new Error(`SEPARATION_PROVIDER is invalid: ${value}`);
 }
 
 export async function startSeparation(audioUrl: string): Promise<string> {

@@ -26,7 +26,7 @@ export function mapPrediction(p: RawPrediction): JobStatus {
       const out = (p.output ?? {}) as Record<string, string>;
       const stems = {} as Record<StemName, string>;
       for (const s of STEMS) {
-        if (!out[s]) return { status: "failed", error: `Spur "${s}" fehlt im Ergebnis` };
+        if (!out[s]) return { status: "failed", error: `Stem "${s}" is missing from the result` };
         stems[s] = `/api/stems/${p.id}/${s}`;
       }
       return { status: "done", stems, inputUrl: p.input?.audio };
@@ -62,7 +62,7 @@ function isMock(): boolean {
 function requireEnv(name: string): string {
   const value = process.env[name];
   if (!value) {
-    throw new Error(`${name} fehlt — ohne diese Env-Var kann die echte Stem-Trennung nicht laufen (siehe .env.example).`);
+    throw new Error(`${name} is missing — real stem separation cannot run without this env var (see .env.example).`);
   }
   return value;
 }

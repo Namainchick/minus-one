@@ -85,7 +85,7 @@ export function PlayerView({ engine, title }: Props) {
       </div>
 
       <p className="mt-4 text-xs text-neutral-500">
-        Schalter = Instrument an/aus · Fader = Lautstärke · Aus heißt: du spielst das selbst
+        Switch = instrument on/off · Fader = volume · Off means: you play it yourself
       </p>
     </div>
   );
